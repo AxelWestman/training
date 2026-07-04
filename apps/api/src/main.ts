@@ -1,5 +1,13 @@
+import { config } from 'dotenv';
+import { existsSync } from 'fs';
+import { resolve } from 'path';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+
+const envPath = resolve(process.cwd(), '../../.env');
+if (existsSync(envPath)) {
+  config({ path: envPath });
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

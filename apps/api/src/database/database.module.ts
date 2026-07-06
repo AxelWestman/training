@@ -1,4 +1,11 @@
-import { Module, Global, OnApplicationShutdown, OnModuleInit, Inject, Logger } from '@nestjs/common';
+import {
+  Module,
+  Global,
+  OnApplicationShutdown,
+  OnModuleInit,
+  Inject,
+  Logger,
+} from '@nestjs/common';
 import { Pool } from 'pg';
 import { PG_POOL } from './database.constants';
 

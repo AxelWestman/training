@@ -88,13 +88,23 @@ Controller → Service → Repository → Database (PostgreSQL vía pg)
 
 Actualmente el módulo `users` implementa este patrón. Las nuevas funcionalidades deben seguir la misma estructura.
 
-### Duplicados de email y DNI
+## API Endpoints — Users
 
-El endpoint `POST /users/createUser` verifica que el email y el DNI no existan antes de crear el usuario:
+| Método | Ruta | Descripción | Respuestas |
+|--------|------|-------------|------------|
+| `POST` | `/users/createUser` | Crea un nuevo usuario | `201` creado · `409` email/DNI duplicado |
+| `GET` | `/users/getAllUsers` | Obtiene todos los usuarios | `200` array de usuarios |
+| `GET` | `/users/getUser/:id` | Obtiene un usuario por ID | `200` usuario · `404` no encontrado |
+| `PATCH` | `/users/activateUser/:id` | Activa un usuario (`is_active = true`) | `200` usuario activado · `404` no encontrado |
+| `PATCH` | `/users/deactivateUser/:id` | Desactiva un usuario (`is_active = false`) | `200` usuario desactivado · `404` no encontrado |
+| `DELETE` | `/users/deleteUser/:id` | Elimina un usuario | `200` usuario eliminado · `404` no encontrado |
 
-- Si el **email** ya existe → `409 Conflict` con mensaje `"Email already exists"`
-- Si el **DNI** ya existe → `409 Conflict` con mensaje `"DNI already exists"`
+### Validaciones
 
-La validación se realiza en el servicio (`UsersService.create`) consultando al repositorio antes de insertar. Las columnas `email` y `dni` tienen restricciones `UNIQUE` en la base de datos como respaldo.<｜end▁of▁thinking｜>
+- `POST /users/createUser` verifica que el **email** y el **DNI** no existan antes de crear:
+  - Email duplicado → `409 Conflict` — `"Email already exists"`
+  - DNI duplicado → `409 Conflict` — `"DNI already exists"`
+- Las columnas `email` y `dni` tienen restricciones `UNIQUE` en la base de datos como respaldo.
+- El parámetro `:id` se valida con `ParseIntPipe` — si no es un número entero responde `400 Bad Request`.<｜end▁of▁thinking｜>
 
 <｜｜DSML｜｜parameter name="description" string="true">Add architecture docs to README

@@ -17,6 +17,43 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get('/getAllUsers')
+  getAllUsers() {
+    return this.usersService.findAll();
+  }
+
+  @Get('/getUser/:id')
+  getUserById(
+    @Param('id', ParseIntPipe)
+    id: number,
+  ) {
+    return this.usersService.findById(id);
+  }
+
+  @Patch('activateUser/:id')
+  activateUser(
+    @Param('id', ParseIntPipe)
+    id: number,
+  ) {
+    return this.usersService.activate(id);
+  }
+
+  @Patch('deactivateUser/:id')
+  deactivateUser(
+    @Param('id', ParseIntPipe)
+    id: number,
+  ) {
+    return this.usersService.deactivate(id);
+  }
+
+  @Delete('deleteUser/:id')
+  deleteUser(
+    @Param('id', ParseIntPipe)
+    id: number,
+  ) {
+    return this.usersService.delete(id);
+  }
+
   @Post('/createUser')
   @UsePipes(new ValidationPipe())
   createUsers(

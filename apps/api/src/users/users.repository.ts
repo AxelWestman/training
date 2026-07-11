@@ -23,6 +23,45 @@ export class UsersRepository {
     return rows[0] ?? null;
   }
 
+  async findById(id: number) {
+    const { rows } = await this.pool.query(
+      `SELECT id, name, lastname, email, dni, phone, birth_date, health_specs, address, is_active, created_at, updated_at FROM clients WHERE id = $1`,
+      [id],
+    );
+    return rows[0] ?? null;
+  }
+
+  async activateById(id: number) {
+    const { rows } = await this.pool.query(
+      `UPDATE clients SET is_active = true, updated_at = NOW() WHERE id = $1 RETURNING id, name, lastname, is_active`,
+      [id],
+    );
+    return rows[0] ?? null;
+  }
+
+  async deactivateById(id: number) {
+    const { rows } = await this.pool.query(
+      `UPDATE clients SET is_active = false, updated_at = NOW() WHERE id = $1 RETURNING id, name, lastname, is_active`,
+      [id],
+    );
+    return rows[0] ?? null;
+  }
+
+  async deleteById(id: number) {
+    const { rows } = await this.pool.query(
+      `DELETE FROM clients WHERE id = $1 RETURNING id`,
+      [id],
+    );
+    return rows[0] ?? null;
+  }
+
+  async findAll() {
+    const { rows } = await this.pool.query(
+      `SELECT id, name, lastname, email, dni, phone, birth_date, health_specs, address, is_active, created_at, updated_at FROM clients ORDER BY id`,
+    );
+    return rows;
+  }
+
   async create(dto: CreateUsersDto) {
     const { rows } = await this.pool.query(
       `INSERT INTO clients (name, lastname, email, password, dni)

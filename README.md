@@ -71,3 +71,30 @@ docker compose down
 | `npm run build:web` | Build del frontend |
 | `npm run build` | Build de todo el monorepo |
 | `npm run lint` | Lintea ambos proyectos |
+
+## Arquitectura del backend
+
+El backend sigue una arquitectura en 3 capas:
+
+```
+Controller → Service → Repository → Database (PostgreSQL vía pg)
+```
+
+| Capa | Responsabilidad |
+|------|----------------|
+| **Controller** | Maneja rutas HTTP, validación de entrada (DTOs con `class-validator`) |
+| **Service**   | Lógica de negocio, orquestación, validaciones de dominio |
+| **Repository** | Acceso a datos, consultas SQL (sin ORM, usando `pg.Pool`) |
+
+Actualmente el módulo `users` implementa este patrón. Las nuevas funcionalidades deben seguir la misma estructura.
+
+### Duplicados de email y DNI
+
+El endpoint `POST /users/createUser` verifica que el email y el DNI no existan antes de crear el usuario:
+
+- Si el **email** ya existe → `409 Conflict` con mensaje `"Email already exists"`
+- Si el **DNI** ya existe → `409 Conflict` con mensaje `"DNI already exists"`
+
+La validación se realiza en el servicio (`UsersService.create`) consultando al repositorio antes de insertar. Las columnas `email` y `dni` tienen restricciones `UNIQUE` en la base de datos como respaldo.<｜end▁of▁thinking｜>
+
+<｜｜DSML｜｜parameter name="description" string="true">Add architecture docs to README

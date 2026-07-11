@@ -23,10 +23,7 @@ export class UsersController {
     @Body()
     user: CreateUsersDto,
   ) {
-    console.log("entramos en la función")
     return this.usersService.create(user);
   }
-
-  
   
 }

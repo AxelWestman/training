@@ -105,6 +105,10 @@ Actualmente el módulo `users` implementa este patrón. Las nuevas funcionalidad
   - Email duplicado → `409 Conflict` — `"Email already exists"`
   - DNI duplicado → `409 Conflict` — `"DNI already exists"`
 - Las columnas `email` y `dni` tienen restricciones `UNIQUE` en la base de datos como respaldo.
-- El parámetro `:id` se valida con `ParseIntPipe` — si no es un número entero responde `400 Bad Request`.<｜end▁of▁thinking｜>
+- El parámetro `:id` se valida con `ParseIntPipe` — si no es un número entero responde `400 Bad Request`.
+
+### Seguridad
+
+- Las contraseñas se hashean con **bcrypt**.
 
 <｜｜DSML｜｜parameter name="description" string="true">Add architecture docs to README

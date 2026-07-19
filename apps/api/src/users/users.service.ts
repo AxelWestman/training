@@ -2,8 +2,8 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
-
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { CreateUsersDto } from './dto/users.dto';
 import { UsersRepository } from './users.repository';
 
@@ -65,6 +65,9 @@ export class UsersService {
     if (existingDni) {
       throw new ConflictException('DNI already exists');
     }
+
+    const salt = await bcrypt.genSalt(10);
+    dto.password = await bcrypt.hash(dto.password, salt);
 
     return this.usersRepository.create(dto);
   }

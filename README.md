@@ -119,9 +119,10 @@ El login busca el email primero en `admins`, luego en `clients`. Si las credenci
 
 | Método | Ruta | Descripción | Respuestas |
 |--------|------|-------------|------------|
-| `POST` | `/admins/createAdmin` | Crea un admin o superadmin | `201` admin creado · `409` email duplicado |
+| `POST` | `/admins/createAdmin` | Crea un admin o superadmin (solo superadmin) | `201` admin creado · `401` no autenticado · `403` no es superadmin · `409` email duplicado |
 
-El campo `role` es opcional (default `admin`). Valores permitidos: `admin` | `superadmin`.
+El campo `role` es obligatorio (default `admin`). Valores permitidos: `admin` | `superadmin`.  
+Este endpoint está protegido — solo un **superadmin** autenticado puede crear admins.
 
 ### Guards
 

@@ -8,9 +8,15 @@ export class AdminsService {
   constructor(private readonly adminsRepository: AdminsRepository) {}
 
   async create(dto: CreateAdminDto) {
-    const existing = await this.adminsRepository.findByEmail(dto.email);
-    if (existing) {
+    const [existingEmail, existingDni] = await Promise.all([
+      this.adminsRepository.findByEmail(dto.email),
+      this.adminsRepository.findByDni(dto.dni)
+    ]);
+    if (existingEmail) {
       throw new ConflictException('Email already exists');
+    }
+    if (existingDni) {
+      throw new ConflictException('DNI already exists');
     }
 
     const salt = await bcrypt.genSalt(10);

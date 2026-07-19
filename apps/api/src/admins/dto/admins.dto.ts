@@ -19,5 +19,13 @@ export class CreateAdminDto {
 
   @IsOptional()
   @IsIn(['admin', 'superadmin'])
-  role?: 'admin' | 'superadmin';
+  role: 'admin' | 'superadmin';
+
+  @IsString()
+  @IsNotEmpty()
+  dni: string;
+
+  @IsString()
+  phone?: string;
+
 }

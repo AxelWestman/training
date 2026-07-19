@@ -119,10 +119,16 @@ El login busca el email primero en `admins`, luego en `clients`. Si las credenci
 
 | Método | Ruta | Descripción | Respuestas |
 |--------|------|-------------|------------|
-| `POST` | `/admins/createAdmin` | Crea un admin o superadmin (solo superadmin) | `201` admin creado · `401` no autenticado · `403` no es superadmin · `409` email duplicado |
+| `GET` | `/admins/getAllAdmins` | Obtiene todos los admins | `200` array de admins · `401` no autenticado |
+| `GET` | `/admins/getAdmin/:id` | Obtiene un admin por ID | `200` admin · `401` no autenticado · `404` no encontrado |
+| `POST` | `/admins/createAdmin` | Crea un admin o superadmin (solo superadmin) | `201` admin creado · `401` no autenticado · `403` no es superadmin · `409` email/DNI duplicado |
+| `PATCH` | `/admins/updateAdmin/:id` | Actualiza un admin (solo superadmin) | `200` admin actualizado · `401` no autenticado · `403` no es superadmin · `404` no encontrado |
+| `DELETE` | `/admins/deleteAdmin/:id` | Elimina un admin (solo superadmin, no a sí mismo) | `200` admin eliminado · `401` no autenticado · `403` no es superadmin · `404` no encontrado |
 
-El campo `role` es obligatorio (default `admin`). Valores permitidos: `admin` | `superadmin`.  
-Este endpoint está protegido — solo un **superadmin** autenticado puede crear admins.
+- `GET /getAllAdmins` y `GET /getAdmin/:id` requieren solo autenticación (cualquier usuario logueado).
+- `POST /createAdmin`, `PATCH /updateAdmin/:id` y `DELETE /deleteAdmin/:id` requieren rol **superadmin**.
+- `DELETE /deleteAdmin/:id` no permite eliminarse a sí mismo (responde `403`).
+- El campo `role` es opcional (default `admin`). Valores permitidos: `admin` | `superadmin`.
 
 ### Guards
 

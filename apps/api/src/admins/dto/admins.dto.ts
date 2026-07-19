@@ -25,7 +25,37 @@ export class CreateAdminDto {
   @IsNotEmpty()
   dni: string;
 
+  @IsOptional()
+  @IsString()
+  phone?: string;
+}
+
+export class UpdateAdminDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  lastname?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  password?: string;
+
+  @IsOptional()
+  @IsString()
+  dni?: string;
+
+  @IsOptional()
   @IsString()
   phone?: string;
 
+  @IsOptional()
+  @IsIn(['admin', 'superadmin'])
+  role?: 'admin' | 'superadmin';
 }

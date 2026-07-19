@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
+import cookieParser from 'cookie-parser';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
@@ -17,6 +18,7 @@ async function bootstrap() {
     credentials: true,
   });
 
+  app.use(cookieParser());
   app.enableShutdownHooks();
 
   const port = process.env.API_PORT ?? 3001;

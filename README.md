@@ -107,8 +107,40 @@ Actualmente el módulo `users` implementa este patrón. Las nuevas funcionalidad
 - Las columnas `email` y `dni` tienen restricciones `UNIQUE` en la base de datos como respaldo.
 - El parámetro `:id` se valida con `ParseIntPipe` — si no es un número entero responde `400 Bad Request`.
 
+## API Endpoints — Auth
+
+| Método | Ruta | Descripción | Respuestas |
+|--------|------|-------------|------------|
+| `POST` | `/auth/login` | Inicia sesión (admins y clients). Setea cookie `session` httpOnly con JWT | `201` usuario · `401` credenciales inválidas |
+
+El login busca el email primero en `admins`, luego en `clients`. Si las credenciales son válidas, firma un JWT (payload: `sub`, `email`, `type`, `role`) y lo devuelve en una cookie httpOnly con expiración de 24h.
+
+## API Endpoints — Admins
+
+| Método | Ruta | Descripción | Respuestas |
+|--------|------|-------------|------------|
+| `POST` | `/admins/createAdmin` | Crea un admin o superadmin | `201` admin creado · `409` email duplicado |
+
+El campo `role` es opcional (default `admin`). Valores permitidos: `admin` | `superadmin`.
+
+### Guards
+
+| Guard | Uso |
+|-------|-----|
+| `JwtAuthGuard` | Verifica que exista una cookie `session` válida |
+| `RolesGuard` | Restringe según el rol del usuario. Se usa con el decorador `@Roles()` |
+
+```typescript
+@UseGuards(JwtAuthGuard)                            // cualquier usuario logueado
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin', 'superadmin')                       // solo admins (admin o superadmin)
+@Roles('superadmin')                                // solo superadmins
+```
+
 ### Seguridad
 
-- Las contraseñas se hashean con **bcrypt**.
+- Las contraseñas se hashean con **bcrypt** (salt rounds = 10) antes de almacenarse tanto en `clients.password` como en `admins.password_hash`.
+- El login firma un **JWT** guardado en cookie **httpOnly** (no accesible desde JavaScript) con `sameSite: 'lax'` y expiración de 24h.
+- Los guards pueden aplicarse a cualquier endpoint para validar la sesión y el rol antes de ejecutar la lógica.
 
 <｜｜DSML｜｜parameter name="description" string="true">Add architecture docs to README

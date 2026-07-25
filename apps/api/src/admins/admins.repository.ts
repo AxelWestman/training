@@ -43,7 +43,15 @@ export class AdminsRepository {
       `INSERT INTO admins (name, lastname, email, password_hash, role, dni, phone)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id, name, lastname, email, dni, phone, role, created_at`,
-      [dto.name, dto.lastname, dto.email, dto.password, dto.role ?? 'admin', dto.dni, dto.phone],
+      [
+        dto.name,
+        dto.lastname,
+        dto.email,
+        dto.password,
+        dto.role ?? 'admin',
+        dto.dni,
+        dto.phone,
+      ],
     );
     return rows[0];
   }

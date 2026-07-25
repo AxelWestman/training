@@ -130,6 +130,19 @@ El login busca el email primero en `admins`, luego en `clients`. Si las credenci
 - `DELETE /deleteAdmin/:id` no permite eliminarse a sí mismo (responde `403`).
 - El campo `role` es opcional (default `admin`). Valores permitidos: `admin` | `superadmin`.
 
+## API Endpoints — Exercises
+
+| Método | Ruta | Descripción | Respuestas |
+|--------|------|-------------|------------|
+| `GET` | `/exercises/getAllExercises` | Obtiene todos los ejercicios | `200` array de ejercicios · `401` no autenticado |
+| `GET` | `/exercises/getExercise/:id` | Obtiene un ejercicio por ID | `200` ejercicio · `401` no autenticado · `404` no encontrado |
+| `POST` | `/exercises/createExercise` | Crea un nuevo ejercicio | `201` ejercicio creado · `401` no autenticado · `403` permisos insuficientes |
+| `PATCH` | `/exercises/updateExercise/:id` | Actualiza un ejercicio | `200` ejercicio actualizado · `401` no autenticado · `403` permisos insuficientes · `404` no encontrado |
+| `DELETE` | `/exercises/deleteExercise/:id` | Elimina un ejercicio (responde `{ "message": "The exercise <name> was deleted" }`) | `200` ejercicio eliminado · `401` no autenticado · `403` permisos insuficientes · `404` no encontrado |
+
+- `GET` requiere solo autenticación (cualquier usuario logueado).
+- `POST`, `PATCH` y `DELETE` requieren rol **admin** o **superadmin**.
+
 ### Guards
 
 | Guard | Uso |

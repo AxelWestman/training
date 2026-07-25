@@ -20,5 +20,4 @@ export class CreateUsersDto {
   @IsString()
   @IsNotEmpty()
   dni: string;
-  
 }

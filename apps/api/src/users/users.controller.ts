@@ -62,5 +62,4 @@ export class UsersController {
   ) {
     return this.usersService.create(user);
   }
-  
 }

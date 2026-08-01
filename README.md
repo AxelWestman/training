@@ -143,6 +143,84 @@ El login busca el email primero en `admins`, luego en `clients`. Si las credenci
 - `GET` requiere solo autenticación (cualquier usuario logueado).
 - `POST`, `PATCH` y `DELETE` requieren rol **admin** o **superadmin**.
 
+## API Endpoints — Routines
+
+| Method | Route | Description | Responses |
+|--------|------|-------------|-----------|
+| `GET` | `/routines/getAllRoutines` | Get all routines with their exercises | `200` array of routines · `401` not authenticated |
+| `GET` | `/routines/getRoutine/:id` | Get a routine by ID with its exercises | `200` routine · `401` not authenticated · `404` not found |
+| `POST` | `/routines/createRoutine` | Create a routine (optionally with exercises) | `201` routine created · `401` not authenticated · `403` insufficient permissions · `404` exercise not found |
+| `PATCH` | `/routines/updateRoutine/:id` | Update routine details | `200` routine updated · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `DELETE` | `/routines/deleteRoutine/:id` | Delete a routine and its associated exercises (CASCADE) | `200` routine deleted · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `POST` | `/routines/:id/addExercise` | Add an exercise to a routine | `201` exercise added · `401` not authenticated · `403` insufficient permissions · `404` routine/exercise not found |
+| `PATCH` | `/routines/:id/updateExercise/:exerciseId` | Update an exercise's parameters within a routine | `200` exercise updated · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `DELETE` | `/routines/:id/removeExercise/:exerciseId` | Remove an exercise from a routine | `200` exercise removed · `401` not authenticated · `403` insufficient permissions · `404` not found |
+
+- `GET` requires authentication only (any logged-in user).
+- `POST`, `PATCH` and `DELETE` require **admin** or **superadmin** role.
+- The routine's `created_by` is automatically assigned from the authenticated admin (extracted from the JWT).
+
+### Request bodies (DTOs)
+
+**POST /routines/createRoutine** — `CreateRoutineDto`
+```json
+{
+  "name": "Push / Pull / Legs",
+  "description": "3-day PPL routine (optional)",
+  "exercises": [
+    {
+      "exercise_id": 1,
+      "day_of_week": 1,
+      "sets": 4,
+      "reps": 10,
+      "rest_time": 90,
+      "order": 1,
+      "notes": "Increase weight progressively"
+    }
+  ]
+}
+```
+
+- `exercises` is an optional array. Each item (`CreateRoutineExerciseDto`) requires:
+  - `exercise_id` (int) — ID of an existing exercise
+  - `day_of_week` (int, 1–7) — Day of the week
+  - `sets` (int, >= 1) — Number of sets
+  - `reps` (int, >= 1) — Number of reps
+  - `order` (int, >= 0) — Order within the day
+  - `rest_time` (int, optional) — Rest time in seconds
+  - `notes` (string, optional) — Additional notes
+
+**PATCH /routines/updateRoutine/:id** — `UpdateRoutineDto`
+```json
+{
+  "name": "New name",
+  "description": "New description",
+  "is_active": false
+}
+```
+All fields are optional.
+
+**PATCH /routines/:id/updateExercise/:exerciseId** — `UpdateRoutineExerciseDto`
+```json
+{
+  "day_of_week": 2,
+  "sets": 5,
+  "reps": 8,
+  "rest_time": 120,
+  "order": 2,
+  "notes": "Updated"
+}
+```
+All fields are optional.
+
+### Tables used
+
+| Table | Purpose |
+|-------|---------|
+| `routines` | Main routine data (`name`, `description`, `created_by`, `is_active`) |
+| `routine_exercises` | Assignment of exercises to routines with parameters (`day_of_week`, `sets`, `reps`, `rest_time`, `order`, `notes`) |
+| `exercises` | Exercise catalog (JOIN to get `exercise_name`, `muscle_group`, `equipment`) |
+
 ### Guards
 
 | Guard | Uso |

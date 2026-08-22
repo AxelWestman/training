@@ -39,4 +39,39 @@ Created the full `routines` module in `apps/api/src/routines/` following the exi
 
 **Schema reference:** `database/schema.sql` — routines (id, name, description, created_by FK, is_active), routine_exercises (id, routine_id FK CASCADE, exercise_id FK CASCADE, day_of_week, sets, reps, rest_time, "order", notes)
 
+---
+
+## Session 3 — 2026-08-22
+
+### Added Swagger (API documentation)
+
+- Installed `@nestjs/swagger` and `swagger-ui-express` (workspace `apps/api`).
+- Configured Swagger in `apps/api/src/main.ts` via `DocumentBuilder` + `SwaggerModule.setup('docs', ...)`. Available at `http://localhost:3001/docs`. Includes `addCookieAuth('session')` to mark the auth mechanism.
+
+### Annotated every endpoint with Swagger decorators
+
+- Added `@ApiProperty`/`@ApiPropertyOptional` to all DTOs across `users`, `admins`, `auth`, `exercises` and `routines`.
+- Created response DTOs (`UserResponseDto`, `AdminResponseDto`, `LoginResponseDto`, `ExerciseResponseDto`, `RoutineResponseDto`, `RoutineExerciseResponseDto`) to document response schemas.
+- Added `@ApiTags`, `@ApiOperation`, `@ApiResponse`, `@ApiParam` and `@ApiCookieAuth` to every controller (including the root `AppController` as "Health").
+
+### Added logout endpoint
+
+- Added `POST /auth/logout` in `apps/api/src/auth/auth.controller.ts` — guarded by `JwtAuthGuard`, clears the `session` cookie via `response.clearCookie` and returns a confirmation message.
+
+### Split README by language
+
+- Rewrote `README.md` fully in English (GitHub-facing).
+- Created `README.es.md` with the same content in Spanish.
+- Both document the Swagger setup, decorators used, and all API endpoints.
+
+### Protected all endpoints with roles
+
+- Made every cookie-protected endpoint require the `admin`/`superadmin` role using `RolesGuard` + `@Roles('admin', 'superadmin')`:
+  - Users: all routes
+  - Admins: `getAllAdmins` and `getAdmin/:id` (create/update/delete remain `superadmin`-only)
+  - Exercises: `getAllExercises` and `getExercise/:id`
+  - Routines: `getAllRoutines`
+- **Exceptions that stay open to any authenticated user:** `auth/logout` and `routines/getRoutine/:id`.
+- Updated both README files with the new role requirements and `403` responses.
+
 

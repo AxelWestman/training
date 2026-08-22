@@ -91,9 +91,7 @@ export class RoutinesService {
   async addExercise(routineId: number, dto: CreateRoutineExerciseDto) {
     const routine = await this.routinesRepository.findById(routineId);
     if (!routine) {
-      throw new NotFoundException(
-        `Routine with id ${routineId} not found`,
-      );
+      throw new NotFoundException(`Routine with id ${routineId} not found`);
     }
 
     const exercise = await this.exercisesRepository.findById(dto.exercise_id);
@@ -103,10 +101,7 @@ export class RoutinesService {
       );
     }
 
-    const created = await this.routinesRepository.addExercise(
-      routineId,
-      dto,
-    );
+    const created = await this.routinesRepository.addExercise(routineId, dto);
     return {
       ...created,
       exercise_name: exercise.name,
@@ -122,9 +117,7 @@ export class RoutinesService {
   ) {
     const routine = await this.routinesRepository.findById(routineId);
     if (!routine) {
-      throw new NotFoundException(
-        `Routine with id ${routineId} not found`,
-      );
+      throw new NotFoundException(`Routine with id ${routineId} not found`);
     }
 
     const existing = await this.routinesRepository.findExerciseById(
@@ -137,19 +130,13 @@ export class RoutinesService {
       );
     }
 
-    return this.routinesRepository.updateExercise(
-      routineId,
-      exerciseId,
-      dto,
-    );
+    return this.routinesRepository.updateExercise(routineId, exerciseId, dto);
   }
 
   async removeExercise(routineId: number, exerciseId: number) {
     const routine = await this.routinesRepository.findById(routineId);
     if (!routine) {
-      throw new NotFoundException(
-        `Routine with id ${routineId} not found`,
-      );
+      throw new NotFoundException(`Routine with id ${routineId} not found`);
     }
 
     const removed = await this.routinesRepository.removeExercise(

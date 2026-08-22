@@ -1,41 +1,41 @@
 # Monorepo Gimnasio
 
-Monorepo con **NestJS** (backend), **Next.js** (frontend) y **PostgreSQL**.
+Monorepo with **NestJS** (backend), **Next.js** (frontend) and **PostgreSQL**.
 
-## Estructura
+## Structure
 
 ```
 ├── apps/
-│   ├── api/          # NestJS - Backend (puerto 3001)
-│   └── web/          # Next.js - Frontend (puerto 3000)
-├── packages/         # Paquetes compartidos (opcional)
+│   ├── api/          # NestJS - Backend (port 3001)
+│   └── web/          # Next.js - Frontend (port 3000)
+├── packages/         # Shared packages (optional)
 ├── docker-compose.yml
-└── package.json      # npm workspaces raíz
+└── package.json      # npm workspaces root
 ```
 
-## Requisitos
+## Requirements
 
 - Node.js >= 20
 - npm
-- Docker (opcional, para contenedores)
+- Docker (optional, for containers)
 
-## Instalación
+## Installation
 
 ```bash
 npm install
 ```
 
-## Desarrollo local
+## Local development
 
 ```bash
-# Backend con hot-reload
+# Backend with hot-reload
 npm run dev:api
 
-# Frontend con hot-reload
+# Frontend with hot-reload
 npm run dev:web
 ```
 
-Variables de entorno en `.env`.
+Environment variables in `.env`.
 
 ## Build
 
@@ -46,108 +46,148 @@ npm run build
 ## Docker
 
 ```bash
-# Levantar todos los servicios (PostgreSQL + API + Web)
+# Start all services (PostgreSQL + API + Web)
 docker compose up -d
 
-# Desarrollo con hot-reload (sincroniza cambios en vivo)
+# Development with hot-reload (syncs changes live)
 docker compose up --watch
 
-# Ver logs
+# View logs
 docker compose logs -f
 
-# Detener
+# Stop
 docker compose down
 ```
 
-> `docker compose up --watch` usa los `Dockerfile.dev` de cada app y sincroniza automáticamente los cambios del código fuente al contenedor. El backend se recarga con `nest start --watch` y el frontend con `next dev` (incluye HMR).
+> `docker compose up --watch` uses each app's `Dockerfile.dev` and automatically syncs source code changes to the container. The backend reloads with `nest start --watch` and the frontend with `next dev` (includes HMR).
 
-## Scripts disponibles
+## Available scripts
 
-| Comando | Descripción |
+| Command | Description |
 |---------|-------------|
-| `npm run dev:api` | Inicia NestJS en modo watch |
-| `npm run dev:web` | Inicia Next.js en modo dev |
-| `npm run build:api` | Build del backend |
-| `npm run build:web` | Build del frontend |
-| `npm run build` | Build de todo el monorepo |
-| `npm run lint` | Lintea ambos proyectos |
+| `npm run dev:api` | Starts NestJS in watch mode |
+| `npm run dev:web` | Starts Next.js in dev mode |
+| `npm run build:api` | Builds the backend |
+| `npm run build:web` | Builds the frontend |
+| `npm run build` | Builds the whole monorepo |
+| `npm run lint` | Lints both projects |
 
-## Arquitectura del backend
+## Backend architecture
 
-El backend sigue una arquitectura en 3 capas:
+The backend follows a 3-layer architecture:
 
 ```
-Controller → Service → Repository → Database (PostgreSQL vía pg)
+Controller → Service → Repository → Database (PostgreSQL via pg)
 ```
 
-| Capa | Responsabilidad |
-|------|----------------|
-| **Controller** | Maneja rutas HTTP, validación de entrada (DTOs con `class-validator`) |
-| **Service**   | Lógica de negocio, orquestación, validaciones de dominio |
-| **Repository** | Acceso a datos, consultas SQL (sin ORM, usando `pg.Pool`) |
+| Layer | Responsibility |
+|-------|----------------|
+| **Controller** | Handles HTTP routes, input validation (DTOs with `class-validator`) |
+| **Service**   | Business logic, orchestration, domain validation |
+| **Repository** | Data access, SQL queries (no ORM, using `pg.Pool`) |
 
-Actualmente el módulo `users` implementa este patrón. Las nuevas funcionalidades deben seguir la misma estructura.
+The `users` module currently implements this pattern. New features must follow the same structure.
+
+## API documentation (Swagger)
+
+The API exposes interactive documentation with **Swagger UI** at:
+
+```
+http://localhost:3001/docs
+```
+
+It is configured in `apps/api/src/main.ts` using `@nestjs/swagger`:
+
+```typescript
+const config = new DocumentBuilder()
+  .setTitle('Gym Management API')
+  .setDescription('Admin panel API for members, memberships, exercises, routines, payments, and attendance.')
+  .setVersion('1.0')
+  .addCookieAuth('session')
+  .build();
+
+const document = SwaggerModule.createDocument(app, config);
+SwaggerModule.setup('docs', app, document);
+```
+
+From Swagger UI you can explore and test the endpoints (**Try it out** button), view request/response schemas and authenticate with the `session` cookie.
+
+### Decorators used
+
+| Decorator | Purpose |
+|-----------|---------|
+| `@ApiTags('Exercises')` | Groups a controller's endpoints under a section |
+| `@ApiOperation({ summary })` | Adds a summary/description per endpoint |
+| `@ApiResponse({ status, description, type })` | Documents response codes and their schema |
+| `@ApiParam({ name, example })` | Documents path parameters |
+| `@ApiProperty({ example })` | Describes fields of an input DTO |
+| `@ApiPropertyOptional()` | Describes optional fields |
+| `@ApiCookieAuth('session')` | Marks the endpoint as protected by the session cookie |
+
+Response DTOs (e.g. `ExerciseResponseDto`, `UserResponseDto`) define the schema Swagger shows for each endpoint.
 
 ## API Endpoints — Users
 
-| Método | Ruta | Descripción | Respuestas |
-|--------|------|-------------|------------|
-| `POST` | `/users/createUser` | Crea un nuevo usuario | `201` creado · `409` email/DNI duplicado |
-| `GET` | `/users/getAllUsers` | Obtiene todos los usuarios | `200` array de usuarios |
-| `GET` | `/users/getUser/:id` | Obtiene un usuario por ID | `200` usuario · `404` no encontrado |
-| `PATCH` | `/users/activateUser/:id` | Activa un usuario (`is_active = true`) | `200` usuario activado · `404` no encontrado |
-| `PATCH` | `/users/deactivateUser/:id` | Desactiva un usuario (`is_active = false`) | `200` usuario desactivado · `404` no encontrado |
-| `DELETE` | `/users/deleteUser/:id` | Elimina un usuario | `200` usuario eliminado · `404` no encontrado |
+| Method | Route | Description | Responses |
+|--------|------|-------------|-----------|
+| `POST` | `/users/createUser` | Creates a new user | `201` created · `401` not authenticated · `403` insufficient permissions · `409` duplicate email/DNI |
+| `GET` | `/users/getAllUsers` | Gets all users | `200` array of users · `401` not authenticated · `403` insufficient permissions |
+| `GET` | `/users/getUser/:id` | Gets a user by ID | `200` user · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `PATCH` | `/users/activateUser/:id` | Activates a user (`is_active = true`) | `200` user activated · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `PATCH` | `/users/deactivateUser/:id` | Deactivates a user (`is_active = false`) | `200` user deactivated · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `DELETE` | `/users/deleteUser/:id` | Deletes a user | `200` user deleted · `401` not authenticated · `403` insufficient permissions · `404` not found |
 
-### Validaciones
+All user endpoints require the **admin** or **superadmin** role.
 
-- `POST /users/createUser` verifica que el **email** y el **DNI** no existan antes de crear:
-  - Email duplicado → `409 Conflict` — `"Email already exists"`
-  - DNI duplicado → `409 Conflict` — `"DNI already exists"`
-- Las columnas `email` y `dni` tienen restricciones `UNIQUE` en la base de datos como respaldo.
-- El parámetro `:id` se valida con `ParseIntPipe` — si no es un número entero responde `400 Bad Request`.
+### Validations
+
+- `POST /users/createUser` checks that the **email** and **DNI** do not exist before creating:
+  - Duplicate email → `409 Conflict` — `"Email already exists"`
+  - Duplicate DNI → `409 Conflict` — `"DNI already exists"`
+- The `email` and `dni` columns have `UNIQUE` constraints in the database as a fallback.
+- The `:id` parameter is validated with `ParseIntPipe` — if it is not an integer it responds `400 Bad Request`.
 
 ## API Endpoints — Auth
 
-| Método | Ruta | Descripción | Respuestas |
-|--------|------|-------------|------------|
-| `POST` | `/auth/login` | Inicia sesión (admins y clients). Setea cookie `session` httpOnly con JWT | `201` usuario · `401` credenciales inválidas |
+| Method | Route | Description | Responses |
+|--------|------|-------------|-----------|
+| `POST` | `/auth/login` | Logs in (admins and clients). Sets an httpOnly `session` cookie with a JWT | `201` user · `401` invalid credentials |
+| `POST` | `/auth/logout` | Logs out and clears the `session` cookie | `200` logged out · `401` not authenticated |
 
-El login busca el email primero en `admins`, luego en `clients`. Si las credenciales son válidas, firma un JWT (payload: `sub`, `email`, `type`, `role`) y lo devuelve en una cookie httpOnly con expiración de 24h.
+Login looks up the email first in `admins`, then in `clients`. If the credentials are valid, it signs a JWT (payload: `sub`, `email`, `type`, `role`) and returns it in an httpOnly cookie with a 24h expiration. Logout requires authentication and clears the `session` cookie.
 
 ## API Endpoints — Admins
 
-| Método | Ruta | Descripción | Respuestas |
-|--------|------|-------------|------------|
-| `GET` | `/admins/getAllAdmins` | Obtiene todos los admins | `200` array de admins · `401` no autenticado |
-| `GET` | `/admins/getAdmin/:id` | Obtiene un admin por ID | `200` admin · `401` no autenticado · `404` no encontrado |
-| `POST` | `/admins/createAdmin` | Crea un admin o superadmin (solo superadmin) | `201` admin creado · `401` no autenticado · `403` no es superadmin · `409` email/DNI duplicado |
-| `PATCH` | `/admins/updateAdmin/:id` | Actualiza un admin (solo superadmin) | `200` admin actualizado · `401` no autenticado · `403` no es superadmin · `404` no encontrado |
-| `DELETE` | `/admins/deleteAdmin/:id` | Elimina un admin (solo superadmin, no a sí mismo) | `200` admin eliminado · `401` no autenticado · `403` no es superadmin · `404` no encontrado |
+| Method | Route | Description | Responses |
+|--------|------|-------------|-----------|
+| `GET` | `/admins/getAllAdmins` | Gets all admins | `200` array of admins · `401` not authenticated · `403` insufficient permissions |
+| `GET` | `/admins/getAdmin/:id` | Gets an admin by ID | `200` admin · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `POST` | `/admins/createAdmin` | Creates an admin or superadmin (superadmin only) | `201` admin created · `401` not authenticated · `403` not superadmin · `409` duplicate email/DNI |
+| `PATCH` | `/admins/updateAdmin/:id` | Updates an admin (superadmin only) | `200` admin updated · `401` not authenticated · `403` not superadmin · `404` not found |
+| `DELETE` | `/admins/deleteAdmin/:id` | Deletes an admin (superadmin only, not themselves) | `200` admin deleted · `401` not authenticated · `403` not superadmin · `404` not found |
 
-- `GET /getAllAdmins` y `GET /getAdmin/:id` requieren solo autenticación (cualquier usuario logueado).
-- `POST /createAdmin`, `PATCH /updateAdmin/:id` y `DELETE /deleteAdmin/:id` requieren rol **superadmin**.
-- `DELETE /deleteAdmin/:id` no permite eliminarse a sí mismo (responde `403`).
-- El campo `role` es opcional (default `admin`). Valores permitidos: `admin` | `superadmin`.
+- `GET /getAllAdmins` and `GET /getAdmin/:id` require the **admin** or **superadmin** role.
+- `POST /createAdmin`, `PATCH /updateAdmin/:id` and `DELETE /deleteAdmin/:id` require the **superadmin** role.
+- `DELETE /deleteAdmin/:id` does not allow deleting yourself (responds `403`).
+- The `role` field is optional (default `admin`). Allowed values: `admin` | `superadmin`.
 
 ## API Endpoints — Exercises
 
-| Método | Ruta | Descripción | Respuestas |
-|--------|------|-------------|------------|
-| `GET` | `/exercises/getAllExercises` | Obtiene todos los ejercicios | `200` array de ejercicios · `401` no autenticado |
-| `GET` | `/exercises/getExercise/:id` | Obtiene un ejercicio por ID | `200` ejercicio · `401` no autenticado · `404` no encontrado |
-| `POST` | `/exercises/createExercise` | Crea un nuevo ejercicio | `201` ejercicio creado · `401` no autenticado · `403` permisos insuficientes |
-| `PATCH` | `/exercises/updateExercise/:id` | Actualiza un ejercicio | `200` ejercicio actualizado · `401` no autenticado · `403` permisos insuficientes · `404` no encontrado |
-| `DELETE` | `/exercises/deleteExercise/:id` | Elimina un ejercicio (responde `{ "message": "The exercise <name> was deleted" }`) | `200` ejercicio eliminado · `401` no autenticado · `403` permisos insuficientes · `404` no encontrado |
+| Method | Route | Description | Responses |
+|--------|------|-------------|-----------|
+| `GET` | `/exercises/getAllExercises` | Gets all exercises | `200` array of exercises · `401` not authenticated · `403` insufficient permissions |
+| `GET` | `/exercises/getExercise/:id` | Gets an exercise by ID | `200` exercise · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `POST` | `/exercises/createExercise` | Creates a new exercise | `201` exercise created · `401` not authenticated · `403` insufficient permissions |
+| `PATCH` | `/exercises/updateExercise/:id` | Updates an exercise | `200` exercise updated · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `DELETE` | `/exercises/deleteExercise/:id` | Deletes an exercise (responds `{ "message": "The exercise <name> was deleted" }`) | `200` exercise deleted · `401` not authenticated · `403` insufficient permissions · `404` not found |
 
-- `GET` requiere solo autenticación (cualquier usuario logueado).
-- `POST`, `PATCH` y `DELETE` requieren rol **admin** o **superadmin**.
+- All endpoints require the **admin** or **superadmin** role.
 
 ## API Endpoints — Routines
 
 | Method | Route | Description | Responses |
 |--------|------|-------------|-----------|
-| `GET` | `/routines/getAllRoutines` | Get all routines with their exercises | `200` array of routines · `401` not authenticated |
+| `GET` | `/routines/getAllRoutines` | Get all routines with their exercises | `200` array of routines · `401` not authenticated · `403` insufficient permissions |
 | `GET` | `/routines/getRoutine/:id` | Get a routine by ID with its exercises | `200` routine · `401` not authenticated · `404` not found |
 | `POST` | `/routines/createRoutine` | Create a routine (optionally with exercises) | `201` routine created · `401` not authenticated · `403` insufficient permissions · `404` exercise not found |
 | `PATCH` | `/routines/updateRoutine/:id` | Update routine details | `200` routine updated · `401` not authenticated · `403` insufficient permissions · `404` not found |
@@ -156,8 +196,8 @@ El login busca el email primero en `admins`, luego en `clients`. Si las credenci
 | `PATCH` | `/routines/:id/updateExercise/:exerciseId` | Update an exercise's parameters within a routine | `200` exercise updated · `401` not authenticated · `403` insufficient permissions · `404` not found |
 | `DELETE` | `/routines/:id/removeExercise/:exerciseId` | Remove an exercise from a routine | `200` exercise removed · `401` not authenticated · `403` insufficient permissions · `404` not found |
 
-- `GET` requires authentication only (any logged-in user).
-- `POST`, `PATCH` and `DELETE` require **admin** or **superadmin** role.
+- `GET /getRoutine/:id` requires authentication only (any logged-in user can view a routine).
+- All other endpoints (`GET /getAllRoutines`, `POST`, `PATCH` and `DELETE`) require the **admin** or **superadmin** role.
 - The routine's `created_by` is automatically assigned from the authenticated admin (extracted from the JWT).
 
 ### Request bodies (DTOs)
@@ -223,22 +263,20 @@ All fields are optional.
 
 ### Guards
 
-| Guard | Uso |
-|-------|-----|
-| `JwtAuthGuard` | Verifica que exista una cookie `session` válida |
-| `RolesGuard` | Restringe según el rol del usuario. Se usa con el decorador `@Roles()` |
+| Guard | Purpose |
+|-------|---------|
+| `JwtAuthGuard` | Verifies that a valid `session` cookie exists |
+| `RolesGuard` | Restricts by user role. Used with the `@Roles()` decorator |
 
 ```typescript
-@UseGuards(JwtAuthGuard)                            // cualquier usuario logueado
+@UseGuards(JwtAuthGuard)                            // any logged-in user
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin', 'superadmin')                       // solo admins (admin o superadmin)
-@Roles('superadmin')                                // solo superadmins
+@Roles('admin', 'superadmin')                       // admins only (admin or superadmin)
+@Roles('superadmin')                                // superadmins only
 ```
 
-### Seguridad
+### Security
 
-- Las contraseñas se hashean con **bcrypt** (salt rounds = 10) antes de almacenarse tanto en `clients.password` como en `admins.password_hash`.
-- El login firma un **JWT** guardado en cookie **httpOnly** (no accesible desde JavaScript) con `sameSite: 'lax'` y expiración de 24h.
-- Los guards pueden aplicarse a cualquier endpoint para validar la sesión y el rol antes de ejecutar la lógica.
-
-<｜｜DSML｜｜parameter name="description" string="true">Add architecture docs to README
+- Passwords are hashed with **bcrypt** (salt rounds = 10) before being stored in both `clients.password` and `admins.password_hash`.
+- Login signs a **JWT** stored in an **httpOnly** cookie (not accessible from JavaScript) with `sameSite: 'lax'` and a 24h expiration.
+- Guards can be applied to any endpoint to validate the session and role before executing the logic.

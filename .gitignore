@@ -6,3 +6,5 @@ dist/
 *.log
 .DS_Store
 database/schema.sql
+opencode.json
+.opencode

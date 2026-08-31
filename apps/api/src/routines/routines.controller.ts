@@ -59,7 +59,11 @@ export class RoutinesController {
   @ApiCookieAuth('session')
   @ApiOperation({ summary: 'Get a single routine by id' })
   @ApiParam({ name: 'id', example: 1, description: 'Routine id' })
-  @ApiResponse({ status: 200, description: 'The routine', type: RoutineResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'The routine',
+    type: RoutineResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Routine not found' })
   findById(@Param('id', ParseIntPipe) id: number) {
     return this.routinesService.findById(id);
@@ -71,7 +75,11 @@ export class RoutinesController {
   @UsePipes(new ValidationPipe())
   @ApiCookieAuth('session')
   @ApiOperation({ summary: 'Create a routine (admin only)' })
-  @ApiResponse({ status: 201, description: 'Created routine', type: RoutineResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Created routine',
+    type: RoutineResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Validation error' })
   create(@Body() dto: CreateRoutineDto, @User('sub') userId: number) {
     return this.routinesService.create(dto, userId);
@@ -84,7 +92,11 @@ export class RoutinesController {
   @ApiCookieAuth('session')
   @ApiOperation({ summary: 'Update a routine (admin only)' })
   @ApiParam({ name: 'id', example: 1, description: 'Routine id' })
-  @ApiResponse({ status: 200, description: 'Updated routine', type: RoutineResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Updated routine',
+    type: RoutineResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Routine not found' })
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateRoutineDto) {
     return this.routinesService.update(id, dto);
@@ -129,7 +141,11 @@ export class RoutinesController {
   @ApiCookieAuth('session')
   @ApiOperation({ summary: 'Update an exercise within a routine (admin only)' })
   @ApiParam({ name: 'id', example: 1, description: 'Routine id' })
-  @ApiParam({ name: 'exerciseId', example: 1, description: 'Routine exercise id' })
+  @ApiParam({
+    name: 'exerciseId',
+    example: 1,
+    description: 'Routine exercise id',
+  })
   @ApiResponse({
     status: 200,
     description: 'Updated routine exercise',
@@ -150,7 +166,11 @@ export class RoutinesController {
   @ApiCookieAuth('session')
   @ApiOperation({ summary: 'Remove an exercise from a routine (admin only)' })
   @ApiParam({ name: 'id', example: 1, description: 'Routine id' })
-  @ApiParam({ name: 'exerciseId', example: 1, description: 'Routine exercise id' })
+  @ApiParam({
+    name: 'exerciseId',
+    example: 1,
+    description: 'Routine exercise id',
+  })
   @ApiResponse({ status: 200, description: 'Removal confirmation' })
   @ApiResponse({ status: 404, description: 'Routine exercise not found' })
   removeExercise(

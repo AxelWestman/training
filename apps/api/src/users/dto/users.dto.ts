@@ -17,7 +17,10 @@ export class CreateUsersDto {
   @IsNotEmpty()
   email: string;
 
-  @ApiProperty({ example: 'secret123', description: 'Plain password (hashed on save)' })
+  @ApiProperty({
+    example: 'secret123',
+    description: 'Plain password (hashed on save)',
+  })
   @IsString()
   @IsNotEmpty()
   password: string;

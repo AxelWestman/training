@@ -42,7 +42,7 @@ export class AdminsService {
     return this.adminsRepository.create(dto);
   }
 
-  async update(id: number, dto: UpdateAdminDto, requestingAdminId: number) {
+  async update(id: number, dto: UpdateAdminDto) {
     const admin = await this.adminsRepository.findById(id);
     if (!admin) {
       throw new NotFoundException(`Admin with id ${id} not found`);

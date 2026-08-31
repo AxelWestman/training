@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { RoutinesRepository } from './routines.repository';
 import {
   CreateRoutineDto,
@@ -11,6 +7,10 @@ import {
   UpdateRoutineExerciseDto,
 } from './dto/routines.dto';
 import { ExercisesRepository } from '../exercises/exercises.repository';
+import {
+  RoutineExerciseView,
+  RoutineWithExercises,
+} from '../database/database.types';
 
 @Injectable()
 export class RoutinesService {
@@ -19,9 +19,9 @@ export class RoutinesService {
     private readonly exercisesRepository: ExercisesRepository,
   ) {}
 
-  async findAll() {
+  async findAll(): Promise<RoutineWithExercises[]> {
     const routines = await this.routinesRepository.findAll();
-    const result: any[] = [];
+    const result: RoutineWithExercises[] = [];
     for (const routine of routines) {
       const exercises = await this.routinesRepository.findExercisesByRoutineId(
         routine.id,
@@ -31,7 +31,7 @@ export class RoutinesService {
     return result;
   }
 
-  async findById(id: number) {
+  async findById(id: number): Promise<RoutineWithExercises> {
     const routine = await this.routinesRepository.findById(id);
     if (!routine) {
       throw new NotFoundException(`Routine with id ${id} not found`);
@@ -41,10 +41,13 @@ export class RoutinesService {
     return { ...routine, exercises };
   }
 
-  async create(dto: CreateRoutineDto, createdBy: number) {
+  async create(
+    dto: CreateRoutineDto,
+    createdBy: number,
+  ): Promise<RoutineWithExercises> {
     const routine = await this.routinesRepository.create(dto, createdBy);
 
-    const exercises: any[] = [];
+    const exercises: RoutineExerciseView[] = [];
     if (dto.exercises && dto.exercises.length > 0) {
       for (const exDto of dto.exercises) {
         const exercise = await this.exercisesRepository.findById(
@@ -88,7 +91,10 @@ export class RoutinesService {
     return { message: `The routine ${routine.name} was deleted` };
   }
 
-  async addExercise(routineId: number, dto: CreateRoutineExerciseDto) {
+  async addExercise(
+    routineId: number,
+    dto: CreateRoutineExerciseDto,
+  ): Promise<RoutineExerciseView> {
     const routine = await this.routinesRepository.findById(routineId);
     if (!routine) {
       throw new NotFoundException(`Routine with id ${routineId} not found`);

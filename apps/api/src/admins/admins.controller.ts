@@ -57,7 +57,11 @@ export class AdminsController {
   @ApiCookieAuth('session')
   @ApiOperation({ summary: 'Get a single admin by id' })
   @ApiParam({ name: 'id', example: 1, description: 'Admin id' })
-  @ApiResponse({ status: 200, description: 'The admin', type: AdminResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'The admin',
+    type: AdminResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Not authenticated' })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Admin not found' })
@@ -71,7 +75,11 @@ export class AdminsController {
   @UsePipes(new ValidationPipe())
   @ApiCookieAuth('session')
   @ApiOperation({ summary: 'Create an admin (superadmin only)' })
-  @ApiResponse({ status: 201, description: 'Created admin', type: AdminResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Created admin',
+    type: AdminResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 409, description: 'Email or DNI already exists' })
   create(@Body() dto: CreateAdminDto) {
@@ -85,14 +93,14 @@ export class AdminsController {
   @ApiCookieAuth('session')
   @ApiOperation({ summary: 'Update an admin (superadmin only)' })
   @ApiParam({ name: 'id', example: 1, description: 'Admin id' })
-  @ApiResponse({ status: 200, description: 'Updated admin', type: AdminResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Updated admin',
+    type: AdminResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Admin not found' })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateAdminDto,
-    @User('sub') requestingAdminId: number,
-  ) {
-    return this.adminsService.update(id, dto, requestingAdminId);
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateAdminDto) {
+    return this.adminsService.update(id, dto);
   }
 
   @Delete('/deleteAdmin/:id')
@@ -101,7 +109,11 @@ export class AdminsController {
   @ApiCookieAuth('session')
   @ApiOperation({ summary: 'Delete an admin (superadmin only)' })
   @ApiParam({ name: 'id', example: 1, description: 'Admin id' })
-  @ApiResponse({ status: 200, description: 'Deleted admin', type: AdminResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Deleted admin',
+    type: AdminResponseDto,
+  })
   @ApiResponse({ status: 403, description: 'Cannot delete yourself' })
   @ApiResponse({ status: 404, description: 'Admin not found' })
   delete(

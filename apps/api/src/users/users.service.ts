@@ -22,7 +22,7 @@ export class UsersService {
     }
     const activateUser = await this.usersRepository.activateById(id);
     return {
-      message: `El usuario ${activateUser.name} ${activateUser.lastname} ha sido activado.`,
+      message: `El usuario ${activateUser!.name} ${activateUser!.lastname} ha sido activado.`,
     };
   }
 
@@ -33,7 +33,7 @@ export class UsersService {
     }
     const deactivateUser = await this.usersRepository.deactivateById(id);
     return {
-      message: `El usuario ${deactivateUser.name} ${deactivateUser.lastname} ha sido desactivado.`,
+      message: `El usuario ${deactivateUser!.name} ${deactivateUser!.lastname} ha sido desactivado.`,
     };
   }
 
@@ -54,7 +54,7 @@ export class UsersService {
     const eliminate_id = await this.usersRepository.deleteById(id);
 
     return {
-      message: `El usuario ${user.name} ${user.lastname} con id ${eliminate_id.id} ha sido eliminado.`,
+      message: `El usuario ${user.name} ${user.lastname} con id ${eliminate_id!.id} ha sido eliminado.`,
     };
   }
 

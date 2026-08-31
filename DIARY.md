@@ -74,4 +74,33 @@ Created the full `routines` module in `apps/api/src/routines/` following the exi
 - **Exceptions that stay open to any authenticated user:** `auth/logout` and `routines/getRoutine/:id`.
 - Updated both README files with the new role requirements and `403` responses.
 
+---
+
+## Session 4 — 2026-08-31
+
+### Created Memberships + Client Memberships modules
+
+Built both modules in `apps/api/src/` following the 3-layer architecture:
+
+- **Memberships** (`memberships/`) — CRUD plans (name, duration_days, price, is_active).
+  - 5 REST endpoints, all admin/superadmin: `GET /memberships/getAllMemberships`, `GET /memberships/getMembership/:id`, `POST /memberships/createMembership`, `PATCH /memberships/updateMembership/:id`, `DELETE /memberships/deleteMembership/:id`.
+  - Note: `memberships` table has no `updated_at` column — queries only return `created_at`.
+- **Client memberships** (`client-memberships/`) — assign membership plans to clients.
+  - Endpoints: `GET /client-memberships/getAllClientMemberships`, `GET /client-memberships/getClientMembership/:id`, `GET /client-memberships/client/:clientId` (all of a client), `POST /client-memberships/createClientMembership`, `PATCH /client-memberships/updateClientMembership/:id`, `DELETE /client-memberships/deleteClientMembership/:id`.
+  - `POST` validates client + membership existence, and auto-computes `end_date = start_date + duration_days` when not provided.
+- **Cross-module injection** — added `exports: [UsersRepository]` to `UsersModule`; `ClientMembershipsModule` imports `AuthModule`, `UsersModule`, `MembershipsModule` (which exports `MembershipsRepository`).
+- Registered both modules in `AppModule`.
+
+### Fixed the whole API lint (175 → 0 problems)
+
+The repo lint was failing with 175 `@typescript-eslint/no-unsafe-*` errors caused by untyped raw-SQL rows (`pg` returns `any[]`), propagated through repositories → services → controllers.
+
+- Created `apps/api/src/database/database.types.ts` with schema-derived row interfaces (ClientRow, AdminRow, ExerciseRow, RoutineRow, RoutineExerciseRow, MembershipRow, ClientMembershipRow + JOIN views and JWT/Auth user types).
+- Typed every repository method with `pool.query<T>(...)` and explicit return types (`T | null`, `T[]`, or `Pick<...>` for partial selects).
+- Typed the guards/decorators (`JwtUser` in `JwtAuthGuard`, `RolesGuard`, `@User`) and removed `(request as any)` casts.
+- Removed unused param `requestingAdminId` from `AdminsService.update`/controller; removed unused imports.
+- `bootstrap()` marked `void` in `main.ts` (floating promise).
+
+**Verify:** `npm run build -w apps/api`, `npm run lint -w apps/api`, and `npm test -w apps/api` all pass. Docker image `training-api` used for build/lint since node isn't installed on the host.
+
 

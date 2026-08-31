@@ -23,7 +23,10 @@ export class CreateAdminDto {
   @IsNotEmpty()
   email: string;
 
-  @ApiProperty({ example: 'secret123', description: 'Plain password (hashed on save)' })
+  @ApiProperty({
+    example: 'secret123',
+    description: 'Plain password (hashed on save)',
+  })
   @IsString()
   @IsNotEmpty()
   password: string;
@@ -42,7 +45,10 @@ export class CreateAdminDto {
   @IsNotEmpty()
   dni: string;
 
-  @ApiPropertyOptional({ example: '+549112345678', description: 'Phone number' })
+  @ApiPropertyOptional({
+    example: '+549112345678',
+    description: 'Phone number',
+  })
   @IsOptional()
   @IsString()
   phone?: string;
@@ -59,22 +65,34 @@ export class UpdateAdminDto {
   @IsString()
   lastname?: string;
 
-  @ApiPropertyOptional({ example: 'ana@example.com', description: 'Email address' })
+  @ApiPropertyOptional({
+    example: 'ana@example.com',
+    description: 'Email address',
+  })
   @IsOptional()
   @IsEmail()
   email?: string;
 
-  @ApiPropertyOptional({ example: 'secret123', description: 'New password (hashed on save)' })
+  @ApiPropertyOptional({
+    example: 'secret123',
+    description: 'New password (hashed on save)',
+  })
   @IsOptional()
   @IsString()
   password?: string;
 
-  @ApiPropertyOptional({ example: '12345678', description: 'National ID (DNI)' })
+  @ApiPropertyOptional({
+    example: '12345678',
+    description: 'National ID (DNI)',
+  })
   @IsOptional()
   @IsString()
   dni?: string;
 
-  @ApiPropertyOptional({ example: '+549112345678', description: 'Phone number' })
+  @ApiPropertyOptional({
+    example: '+549112345678',
+    description: 'Phone number',
+  })
   @IsOptional()
   @IsString()
   phone?: string;

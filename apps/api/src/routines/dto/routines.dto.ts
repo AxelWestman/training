@@ -45,7 +45,10 @@ export class CreateRoutineExerciseDto {
   @Min(0)
   order: number;
 
-  @ApiPropertyOptional({ example: 'Keep form strict', description: 'Extra notes' })
+  @ApiPropertyOptional({
+    example: 'Keep form strict',
+    description: 'Extra notes',
+  })
   @IsOptional()
   @IsString()
   notes?: string;
@@ -57,7 +60,10 @@ export class CreateRoutineDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiPropertyOptional({ example: 'Beginner full body routine', description: 'Routine description' })
+  @ApiPropertyOptional({
+    example: 'Beginner full body routine',
+    description: 'Routine description',
+  })
   @IsOptional()
   @IsString()
   description?: string;
@@ -79,12 +85,18 @@ export class UpdateRoutineDto {
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ example: 'Beginner full body routine', description: 'Routine description' })
+  @ApiPropertyOptional({
+    example: 'Beginner full body routine',
+    description: 'Routine description',
+  })
   @IsOptional()
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ example: true, description: 'Whether the routine is active' })
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Whether the routine is active',
+  })
   @IsOptional()
   @IsBoolean()
   is_active?: boolean;

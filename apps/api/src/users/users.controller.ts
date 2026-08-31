@@ -117,7 +117,11 @@ export class UsersController {
   @ApiCookieAuth('session')
   @UsePipes(new ValidationPipe())
   @ApiOperation({ summary: 'Create a user' })
-  @ApiResponse({ status: 201, description: 'Created user', type: UserResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Created user',
+    type: UserResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 401, description: 'Not authenticated' })
   @ApiResponse({ status: 409, description: 'Email or DNI already exists' })

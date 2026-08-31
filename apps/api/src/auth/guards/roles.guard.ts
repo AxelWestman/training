@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from './roles.decorator';
+import { JwtUser } from '../../database/database.types';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -19,7 +20,7 @@ export class RolesGuard implements CanActivate {
 
     if (!requiredRoles) return true;
 
-    const user = context.switchToHttp().getRequest().user;
+    const user = context.switchToHttp().getRequest<{ user?: JwtUser }>().user;
     if (!user) throw new ForbiddenException('Not authenticated');
 
     if (!requiredRoles.includes(user.role)) {

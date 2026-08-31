@@ -1,13 +1,31 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Pool } from 'pg';
 import { PG_POOL } from '../database/database.constants';
+import { AuthUser } from '../database/database.types';
+
+interface AuthAdminRow {
+  id: number;
+  name: string;
+  lastname: string;
+  email: string;
+  password_hash: string;
+  role: 'admin' | 'superadmin';
+}
+
+interface AuthClientRow {
+  id: number;
+  name: string;
+  lastname: string;
+  email: string;
+  password: string;
+}
 
 @Injectable()
 export class AuthRepository {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
 
-  async findUserByEmail(email: string) {
-    const adminResult = await this.pool.query(
+  async findUserByEmail(email: string): Promise<AuthUser | null> {
+    const adminResult = await this.pool.query<AuthAdminRow>(
       `SELECT id, name, lastname, email, password_hash, role FROM admins WHERE email = $1`,
       [email],
     );
@@ -24,7 +42,7 @@ export class AuthRepository {
       };
     }
 
-    const clientResult = await this.pool.query(
+    const clientResult = await this.pool.query<AuthClientRow>(
       `SELECT id, name, lastname, email, password FROM clients WHERE email = $1`,
       [email],
     );

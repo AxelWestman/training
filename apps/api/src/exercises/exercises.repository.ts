@@ -1,14 +1,15 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Pool } from 'pg';
 import { PG_POOL } from '../database/database.constants';
+import { ExerciseRow } from '../database/database.types';
 import { CreateExerciseDto, UpdateExerciseDto } from './dto/exercises.dto';
 
 @Injectable()
 export class ExercisesRepository {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
 
-  async findById(id: number) {
-    const { rows } = await this.pool.query(
+  async findById(id: number): Promise<ExerciseRow | null> {
+    const { rows } = await this.pool.query<ExerciseRow>(
       `SELECT id, name, description, muscle_group, equipment, image_url, created_at, updated_at
        FROM exercises WHERE id = $1`,
       [id],
@@ -16,16 +17,16 @@ export class ExercisesRepository {
     return rows[0] ?? null;
   }
 
-  async findAll() {
-    const { rows } = await this.pool.query(
+  async findAll(): Promise<ExerciseRow[]> {
+    const { rows } = await this.pool.query<ExerciseRow>(
       `SELECT id, name, description, muscle_group, equipment, image_url, created_at, updated_at
        FROM exercises ORDER BY name`,
     );
     return rows;
   }
 
-  async create(dto: CreateExerciseDto) {
-    const { rows } = await this.pool.query(
+  async create(dto: CreateExerciseDto): Promise<ExerciseRow> {
+    const { rows } = await this.pool.query<ExerciseRow>(
       `INSERT INTO exercises (name, description, muscle_group, equipment, image_url)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, name, description, muscle_group, equipment, image_url, created_at, updated_at`,
@@ -40,7 +41,10 @@ export class ExercisesRepository {
     return rows[0];
   }
 
-  async updateById(id: number, dto: UpdateExerciseDto) {
+  async updateById(
+    id: number,
+    dto: UpdateExerciseDto,
+  ): Promise<ExerciseRow | null> {
     const fields: string[] = [];
     const values: any[] = [];
     let idx = 1;
@@ -71,7 +75,7 @@ export class ExercisesRepository {
     fields.push(`updated_at = NOW()`);
     values.push(id);
 
-    const { rows } = await this.pool.query(
+    const { rows } = await this.pool.query<ExerciseRow>(
       `UPDATE exercises SET ${fields.join(', ')} WHERE id = $${idx}
        RETURNING id, name, description, muscle_group, equipment, image_url, created_at, updated_at`,
       values,
@@ -79,8 +83,10 @@ export class ExercisesRepository {
     return rows[0] ?? null;
   }
 
-  async deleteById(id: number) {
-    const { rows } = await this.pool.query(
+  async deleteById(
+    id: number,
+  ): Promise<Pick<ExerciseRow, 'id' | 'name'> | null> {
+    const { rows } = await this.pool.query<Pick<ExerciseRow, 'id' | 'name'>>(
       `DELETE FROM exercises WHERE id = $1 RETURNING id, name`,
       [id],
     );

@@ -8,6 +8,8 @@ import { AdminsModule } from './admins/admins.module';
 import { AuthModule } from './auth/auth.module';
 import { ExercisesModule } from './exercises/exercises.module';
 import { RoutinesModule } from './routines/routines.module';
+import { MembershipsModule } from './memberships/memberships.module';
+import { ClientMembershipsModule } from './client-memberships/client-memberships.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { RoutinesModule } from './routines/routines.module';
     AuthModule,
     ExercisesModule,
     RoutinesModule,
+    MembershipsModule,
+    ClientMembershipsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

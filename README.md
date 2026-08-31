@@ -261,6 +261,87 @@ All fields are optional.
 | `routine_exercises` | Assignment of exercises to routines with parameters (`day_of_week`, `sets`, `reps`, `rest_time`, `order`, `notes`) |
 | `exercises` | Exercise catalog (JOIN to get `exercise_name`, `muscle_group`, `equipment`) |
 
+## API Endpoints — Memberships
+
+| Method | Route | Description | Responses |
+|--------|------|-------------|-----------|
+| `GET` | `/memberships/getAllMemberships` | Gets all membership plans | `200` array of plans · `401` not authenticated · `403` insufficient permissions |
+| `GET` | `/memberships/getMembership/:id` | Gets a membership plan by ID | `200` plan · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `POST` | `/memberships/createMembership` | Creates a membership plan | `201` plan created · `400` validation error · `401` not authenticated · `403` insufficient permissions |
+| `PATCH` | `/memberships/updateMembership/:id` | Updates a membership plan | `200` plan updated · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `DELETE` | `/memberships/deleteMembership/:id` | Deletes a membership plan (responds `{ "message": "The membership <name> was deleted" }`) | `200` plan deleted · `401` not authenticated · `403` insufficient permissions · `404` not found |
+
+- All endpoints require the **admin** or **superadmin** role.
+
+### Request bodies (DTOs)
+
+**POST /memberships/createMembership** — `CreateMembershipDto`
+```json
+{
+  "name": "Semestral",
+  "duration_days": 180,
+  "price": 75000,
+  "is_active": true
+}
+```
+
+- `name` (string, required) — Plan name
+- `duration_days` (int, >= 1, required) — Duration in days
+- `price` (number, >= 0, required) — Price
+- `is_active` (boolean, optional, default `true`) — Whether the plan is active
+
+**PATCH /memberships/updateMembership/:id** — `UpdateMembershipDto`. All fields are optional.
+
+### Table used
+
+| Table | Purpose |
+|-------|---------|
+| `memberships` | Membership plans (`name`, `duration_days`, `price`, `is_active`) |
+
+## API Endpoints — Client Memberships
+
+| Method | Route | Description | Responses |
+|--------|------|-------------|-----------|
+| `GET` | `/client-memberships/getAllClientMemberships` | Gets all client memberships (with client and plan names) | `200` array · `401` not authenticated · `403` insufficient permissions |
+| `GET` | `/client-memberships/getClientMembership/:id` | Gets a client membership by ID | `200` record · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `GET` | `/client-memberships/client/:clientId` | Gets all memberships of a client | `200` array · `401` not authenticated · `403` insufficient permissions · `404` client not found |
+| `POST` | `/client-memberships/createClientMembership` | Assigns a membership plan to a client | `201` record created · `400` validation error · `401` not authenticated · `403` insufficient permissions · `404` client/plan not found |
+| `PATCH` | `/client-memberships/updateClientMembership/:id` | Updates dates or status | `200` record updated · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `DELETE` | `/client-memberships/deleteClientMembership/:id` | Deletes a client membership | `200` record deleted · `401` not authenticated · `403` insufficient permissions · `404` not found |
+
+- All endpoints require the **admin** or **superadmin** role.
+- `POST /createClientMembership` validates that the **client** and the **membership plan** exist. If `end_date` is not provided, it is automatically computed as `start_date + duration_days` of the plan.
+- `status` allowed values: `active` | `expired` | `cancelled` (default `active`).
+
+### Request bodies (DTOs)
+
+**POST /client-memberships/createClientMembership** — `CreateClientMembershipDto`
+```json
+{
+  "client_id": 1,
+  "membership_id": 1,
+  "start_date": "2026-09-01",
+  "end_date": "2026-12-01",
+  "status": "active"
+}
+```
+
+- `client_id` (int, required) — ID of an existing client
+- `membership_id` (int, required) — ID of an existing membership plan
+- `start_date` (date `YYYY-MM-DD`, required) — Start date
+- `end_date` (date, optional) — End date (defaults to `start_date + duration_days`)
+- `status` (string, optional) — `active` | `expired` | `cancelled`
+
+**PATCH /client-memberships/updateClientMembership/:id** — `UpdateClientMembershipDto` (`start_date`, `end_date`, `status`, all optional).
+
+### Tables used
+
+| Table | Purpose |
+|-------|---------|
+| `client_memberships` | Assignment of a membership plan to a client (`client_id`, `membership_id`, `start_date`, `end_date`, `status`) |
+| `clients` | Client data (JOIN for `client_name`) |
+| `memberships` | Plan data (JOIN for `membership_name` and to compute `end_date`) |
+
 ### Guards
 
 | Guard | Purpose |

@@ -8,3 +8,4 @@ dist/
 database/schema.sql
 opencode.json
 .opencode
+TODO.md

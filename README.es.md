@@ -261,6 +261,53 @@ Todos los campos son opcionales.
 | `routine_exercises` | Asignación de ejercicios a rutinas con parámetros (`day_of_week`, `sets`, `reps`, `rest_time`, `order`, `notes`) |
 | `exercises` | Catálogo de ejercicios (JOIN para obtener `exercise_name`, `muscle_group`, `equipment`) |
 
+## API Endpoints — Client Routines
+
+| Método | Ruta | Descripción | Respuestas |
+|--------|------|-------------|------------|
+| `GET` | `/client-routines/getAllClientRoutines` | Obtiene todas las rutinas de clientes (con nombres de cliente y rutina) | `200` array · `401` no autenticado · `403` permisos insuficientes |
+| `GET` | `/client-routines/getClientRoutine/:id` | Obtiene una rutina de cliente por ID | `200` registro · `401` no autenticado · `404` no encontrado |
+| `GET` | `/client-routines/client/:clientId` | Obtiene todas las rutinas asignadas a un cliente (admins: cualquiera; clientes: solo las propias) | `200` array · `401` no autenticado · `403` permisos insuficientes / no es propia · `404` cliente no encontrado |
+| `GET` | `/client-routines/routine/:routineId` | Obtiene todos los clientes asignados a una rutina | `200` array · `401` no autenticado · `403` permisos insuficientes · `404` rutina no encontrada |
+| `POST` | `/client-routines/createClientRoutine` | Asigna una rutina a un cliente | `201` registro creado · `400` error de validación · `401` no autenticado · `403` permisos insuficientes · `404` cliente/rutina no encontrado |
+| `PATCH` | `/client-routines/updateClientRoutine/:id` | Actualiza fechas o `is_active` | `200` registro actualizado · `401` no autenticado · `403` permisos insuficientes · `404` no encontrado |
+| `DELETE` | `/client-routines/deleteClientRoutine/:id` | Elimina una rutina de cliente | `200` registro eliminado · `401` no autenticado · `403` permisos insuficientes · `404` no encontrado |
+
+- `GET /getAllClientRoutines`, `GET /client/:clientId` (solo admins), `GET /routine/:routineId`, `POST`, `PATCH` y `DELETE` requieren rol **admin** o **superadmin**.
+- `GET /getClientRoutine/:id` solo requiere autenticación (cualquier usuario logueado puede ver una rutina de cliente, igual que `GET /routines/getRoutine/:id`).
+- `GET /client/:clientId` también acepta **clientes**, pero solo para su propio id (`403` en caso contrario).
+- `POST /createClientRoutine` valida que el **cliente** y la **rutina** existan. `assigned_by` se asigna automáticamente desde el admin autenticado (extraído del JWT).
+- `is_active` por defecto `true`.
+
+### Request bodies (DTOs)
+
+**POST /client-routines/createClientRoutine** — `CreateClientRoutineDto`
+```json
+{
+  "client_id": 1,
+  "routine_id": 1,
+  "start_date": "2026-09-01",
+  "end_date": "2026-10-01",
+  "is_active": true
+}
+```
+
+- `client_id` (int, requerido) — ID de un cliente existente
+- `routine_id` (int, requerido) — ID de una rutina existente
+- `start_date` (fecha `YYYY-MM-DD`, requerido) — Fecha de inicio
+- `end_date` (fecha, opcional) — Fecha de fin
+- `is_active` (boolean, opcional) — Si la asignación está activa
+
+**PATCH /client-routines/updateClientRoutine/:id** — `UpdateClientRoutineDto` (`start_date`, `end_date`, `is_active`, todos opcionales).
+
+### Tablas usadas
+
+| Tabla | Propósito |
+|-------|-----------|
+| `client_routines` | Asignación de una rutina a un cliente (`client_id`, `routine_id`, `assigned_by`, `start_date`, `end_date`, `is_active`) |
+| `clients` | Datos del cliente (JOIN para `client_name`) |
+| `routines` | Datos de la rutina (JOIN para `routine_name`) |
+
 ## API Endpoints — Memberships
 
 | Método | Ruta | Descripción | Respuestas |
@@ -341,6 +388,55 @@ Todos los campos son opcionales.
 | `client_memberships` | Asignación de un plan de membresía a un cliente (`client_id`, `membership_id`, `start_date`, `end_date`, `status`) |
 | `clients` | Datos del cliente (JOIN para `client_name`) |
 | `memberships` | Datos del plan (JOIN para `membership_name` y para calcular `end_date`) |
+
+## API Endpoints — Payments
+
+| Método | Ruta | Descripción | Respuestas |
+|--------|------|-------------|------------|
+| `GET` | `/payments/getAllPayments` | Obtiene todos los pagos (con nombres de cliente y plan) | `200` array · `401` no autenticado · `403` permisos insuficientes |
+| `GET` | `/payments/getPayment/:id` | Obtiene un pago por ID | `200` pago · `401` no autenticado · `403` permisos insuficientes · `404` no encontrado |
+| `GET` | `/payments/client/:clientId` | Obtiene todos los pagos de un cliente | `200` array · `401` no autenticado · `403` permisos insuficientes · `404` cliente no encontrado |
+| `POST` | `/payments/createPayment` | Crea un pago | `201` pago creado · `400` error de validación · `401` no autenticado · `403` permisos insuficientes · `404` cliente/membresía no encontrado |
+| `PATCH` | `/payments/updatePayment/:id` | Actualiza un pago | `200` pago actualizado · `401` no autenticado · `403` permisos insuficientes · `404` no encontrado |
+| `DELETE` | `/payments/deletePayment/:id` | Elimina un pago (responde `{ "message": "The payment with id <id> was deleted" }`) | `200` pago eliminado · `401` no autenticado · `403` permisos insuficientes · `404` no encontrado |
+
+- Todos los endpoints requieren rol **admin** o **superadmin**.
+- `POST /createPayment` valida que el **cliente** exista y, si se envía, que la **membresía de cliente** exista.
+- Valores permitidos de `method`: `cash` | `card` | `transfer`.
+- Valores permitidos de `status`: `paid` | `pending` | `overdue` (default `pending`).
+
+### Request bodies (DTOs)
+
+**POST /payments/createPayment** — `CreatePaymentDto`
+```json
+{
+  "client_id": 1,
+  "client_membership_id": 1,
+  "amount": 15000.0,
+  "payment_date": "2026-09-01",
+  "due_date": "2026-09-01",
+  "method": "cash",
+  "status": "paid"
+}
+```
+
+- `client_id` (int, requerido) — ID de un cliente existente
+- `client_membership_id` (int, opcional) — ID de una membresía de cliente vinculada al pago
+- `amount` (number, >= 0, requerido) — Monto pagado
+- `payment_date` (fecha `YYYY-MM-DD`, requerido) — Fecha del pago
+- `due_date` (fecha `YYYY-MM-DD`, requerido) — Fecha de vencimiento
+- `method` (string, requerido) — `cash` | `card` | `transfer`
+- `status` (string, opcional) — `paid` | `pending` | `overdue`
+
+**PATCH /payments/updatePayment/:id** — `UpdatePaymentDto` (`client_membership_id`, `amount`, `payment_date`, `due_date`, `method`, `status`, todos opcionales).
+
+### Tablas usadas
+
+| Tabla | Propósito |
+|-------|-----------|
+| `payments` | Pagos (`client_id`, `client_membership_id`, `amount`, `payment_date`, `due_date`, `method`, `status`) |
+| `clients` | Datos del cliente (JOIN para `client_name`) |
+| `client_memberships` + `memberships` | LEFT JOINs para `membership_name` |
 
 ### Guards
 

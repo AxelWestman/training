@@ -104,3 +104,60 @@ The repo lint was failing with 175 `@typescript-eslint/no-unsafe-*` errors cause
 **Verify:** `npm run build -w apps/api`, `npm run lint -w apps/api`, and `npm test -w apps/api` all pass. Docker image `training-api` used for build/lint since node isn't installed on the host.
 
 
+
+---
+
+## Session 5 — 2026-09-16
+
+### Created Payments module
+
+Built the full `payments` module in `apps/api/src/payments/` following the 3-layer architecture:
+
+- **DTOs** — `CreatePaymentDto` (client_id, client_membership_id?, amount, payment_date, due_date, method, status?) and `UpdatePaymentDto` (all optional). `method` matches `cash|card|transfer`, `status` matches `paid|pending|overdue` (default `pending`).
+- **Repository** — Raw SQL via `pg.Pool`:
+  - findAll / findById / findByClientId with LEFT JOINs on `client_memberships` + `memberships` to expose `client_name` and `membership_name` (`PaymentView`).
+  - create (default status `pending`), updateById (dynamic fields + `updated_at = NOW()`), deleteById.
+- **Service** — Validates the **client** exists (via `UsersRepository`) and, when provided, the **client_membership** exists (via `ClientMembershipsRepository`); NotFoundException handling.
+- **Controller** — 6 REST endpoints, all admin/superadmin:
+  - `GET /payments/getAllPayments`, `GET /payments/getPayment/:id`, `GET /payments/client/:clientId`, `POST /payments/createPayment`, `PATCH /payments/updatePayment/:id`, `DELETE /payments/deletePayment/:id`.
+- **Module** — Registered `PaymentsModule` in `AppModule`. Added `exports: [ClientMembershipsRepository]` to `ClientMembershipsModule` to allow cross-module injection.
+- **Types** — Added `PaymentRow` and `PaymentView` to `apps/api/src/database/database.types.ts`.
+- **Documentation** — Updated `TODO.md`, `DIARY.md`, and the README endpoint tables.
+
+**Schema reference:** `database/schema.sql` — payments (id, client_id FK, client_membership_id FK nullable, amount DECIMAL, payment_date, due_date, method CHECK, status CHECK default 'pending').
+
+**Verify:** `npm run build`, `npm run lint`, and `npm test` all pass via Docker image `training-api`.
+
+
+### Created Client Routines module
+
+Built the full `client-routines` module in `apps/api/src/client-routines/` following the 3-layer architecture:
+
+- **DTOs** — `CreateClientRoutineDto` (client_id, routine_id, start_date, end_date?, is_active?) and `UpdateClientRoutineDto` (start_date?, end_date?, is_active?).
+- **Repository** — Raw SQL via `pg.Pool`:
+  - findAll / findById / findByClientId / findByRoutineId with JOINs on `clients` + `routines` to expose `client_name` and `routine_name` (`ClientRoutineView`).
+  - create (default `is_active` true), updateById (dynamic fields + `updated_at = NOW()`), deleteById.
+- **Service** — Validates the **client** exists (via `UsersRepository`) and the **routine** exists (via `RoutinesRepository`); NotFoundException handling.
+- **Controller** — 7 REST endpoints, all admin/superadmin:
+  - `GET /client-routines/getAllClientRoutines`, `GET /client-routines/getClientRoutine/:id`, `GET /client-routines/client/:clientId`, `GET /client-routines/routine/:routineId`, `POST /client-routines/createClientRoutine`, `PATCH /client-routines/updateClientRoutine/:id`, `DELETE /client-routines/deleteClientRoutine/:id`.
+  - `POST /createClientRoutine` extracts `assigned_by` from the JWT via `@User('sub')`.
+- **Module** — Registered `ClientRoutinesModule` in `AppModule`. Added `exports: [RoutinesRepository]` to `RoutinesModule` for cross-module injection.
+- **Types** — Added `ClientRoutineRow` and `ClientRoutineView` to `apps/api/src/database/database.types.ts`.
+- **Documentation** — Updated `TODO.md`, `DIARY.md`, and the README endpoint tables.
+
+**Schema reference:** `database/schema.sql` — client_routines (id, client_id FK, routine_id FK, assigned_by FK, start_date, end_date, is_active, UNIQUE(client_id, routine_id, start_date)).
+
+**Verify:** `npm run build`, `npm run lint`, and `npm test` all pass via Docker image `training-api`.
+
+
+### Fixed client-routines auth: clients can now view their own routines
+
+Bug found: `GET /client-routines/getClientRoutine/:id` and `GET /client-routines/client/:clientId` required the `admin`/`superadmin` role, so a client could never see their own assigned routine (contradicting the existing `routines` module, where `GET /routines/getRoutine/:id` is open to any authenticated user).
+
+Changes:
+- `GET /client-routines/getClientRoutine/:id` → `@UseGuards(JwtAuthGuard)` only (any logged-in user), mirroring `GET /routines/getRoutine/:id`.
+- `GET /client-routines/client/:clientId` → now also accepts the `client` role via `@Roles('admin', 'superadmin', 'client')`, with an inline ownership check in the service (`client-routines.service.ts`): if `requestingUser.type === 'client'` and `requestingUser.sub !== clientId` → `403 ForbiddenException`. Admins/superadmins can still view any client. Uses the existing inline-check pattern from `admins.service.ts` (`Cannot delete yourself`).
+- Typed the controller param with `import type { JwtUser }` to satisfy `isolatedModules`/`emitDecoratorMetadata`.
+- Updated READMEs and TODO.md.
+
+**Verify:** `npm run build`, `npm run lint`, `npm test` pass via Docker image `training-api`.

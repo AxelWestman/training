@@ -50,6 +50,41 @@ export interface ClientMembershipView extends ClientMembershipRow {
   membership_name: string;
 }
 
+export interface PaymentRow {
+  id: number;
+  client_id: number;
+  client_membership_id: number | null;
+  amount: string;
+  payment_date: string;
+  due_date: string;
+  method: 'cash' | 'card' | 'transfer';
+  status: 'paid' | 'pending' | 'overdue';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaymentView extends PaymentRow {
+  client_name: string;
+  membership_name: string | null;
+}
+
+export interface ClientRoutineRow {
+  id: number;
+  client_id: number;
+  routine_id: number;
+  assigned_by: number;
+  start_date: string;
+  end_date: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClientRoutineView extends ClientRoutineRow {
+  client_name: string;
+  routine_name: string;
+}
+
 export interface ExerciseRow {
   id: number;
   name: string;

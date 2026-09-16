@@ -10,5 +10,6 @@ import { ClientMembershipsRepository } from './client-memberships.repository';
   imports: [AuthModule, UsersModule, MembershipsModule],
   controllers: [ClientMembershipsController],
   providers: [ClientMembershipsService, ClientMembershipsRepository],
+  exports: [ClientMembershipsRepository],
 })
 export class ClientMembershipsModule {}

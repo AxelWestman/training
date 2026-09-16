@@ -261,6 +261,53 @@ All fields are optional.
 | `routine_exercises` | Assignment of exercises to routines with parameters (`day_of_week`, `sets`, `reps`, `rest_time`, `order`, `notes`) |
 | `exercises` | Exercise catalog (JOIN to get `exercise_name`, `muscle_group`, `equipment`) |
 
+## API Endpoints — Client Routines
+
+| Method | Route | Description | Responses |
+|--------|------|-------------|-----------|
+| `GET` | `/client-routines/getAllClientRoutines` | Gets all client routines (with client and routine names) | `200` array · `401` not authenticated · `403` insufficient permissions |
+| `GET` | `/client-routines/getClientRoutine/:id` | Gets a client routine by ID | `200` record · `401` not authenticated · `404` not found |
+| `GET` | `/client-routines/client/:clientId` | Gets all routines assigned to a client (admins: anyone; clients: only their own) | `200` array · `401` not authenticated · `403` insufficient permissions / not own · `404` client not found |
+| `GET` | `/client-routines/routine/:routineId` | Gets all clients assigned to a routine | `200` array · `401` not authenticated · `403` insufficient permissions · `404` routine not found |
+| `POST` | `/client-routines/createClientRoutine` | Assigns a routine to a client | `201` record created · `400` validation error · `401` not authenticated · `403` insufficient permissions · `404` client/routine not found |
+| `PATCH` | `/client-routines/updateClientRoutine/:id` | Updates dates or `is_active` | `200` record updated · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `DELETE` | `/client-routines/deleteClientRoutine/:id` | Deletes a client routine | `200` record deleted · `401` not authenticated · `403` insufficient permissions · `404` not found |
+
+- `GET /getAllClientRoutines`, `GET /client/:clientId` (admins only), `GET /routine/:routineId`, `POST`, `PATCH` and `DELETE` require the **admin** or **superadmin** role.
+- `GET /getClientRoutine/:id` requires authentication only (any logged-in user can view a single client routine, like `GET /routines/getRoutine/:id`).
+- `GET /client/:clientId` also accepts **clients**, but only for their own id (`403` otherwise).
+- `POST /createClientRoutine` validates that the **client** and the **routine** exist. `assigned_by` is automatically set from the authenticated admin (extracted from the JWT).
+- `is_active` defaults to `true`.
+
+### Request bodies (DTOs)
+
+**POST /client-routines/createClientRoutine** — `CreateClientRoutineDto`
+```json
+{
+  "client_id": 1,
+  "routine_id": 1,
+  "start_date": "2026-09-01",
+  "end_date": "2026-10-01",
+  "is_active": true
+}
+```
+
+- `client_id` (int, required) — ID of an existing client
+- `routine_id` (int, required) — ID of an existing routine
+- `start_date` (date `YYYY-MM-DD`, required) — Start date
+- `end_date` (date, optional) — End date
+- `is_active` (boolean, optional) — Whether the assignment is active
+
+**PATCH /client-routines/updateClientRoutine/:id** — `UpdateClientRoutineDto` (`start_date`, `end_date`, `is_active`, all optional).
+
+### Tables used
+
+| Table | Purpose |
+|-------|---------|
+| `client_routines` | Assignment of a routine to a client (`client_id`, `routine_id`, `assigned_by`, `start_date`, `end_date`, `is_active`) |
+| `clients` | Client data (JOIN for `client_name`) |
+| `routines` | Routine data (JOIN for `routine_name`) |
+
 ## API Endpoints — Memberships
 
 | Method | Route | Description | Responses |
@@ -341,6 +388,55 @@ All fields are optional.
 | `client_memberships` | Assignment of a membership plan to a client (`client_id`, `membership_id`, `start_date`, `end_date`, `status`) |
 | `clients` | Client data (JOIN for `client_name`) |
 | `memberships` | Plan data (JOIN for `membership_name` and to compute `end_date`) |
+
+## API Endpoints — Payments
+
+| Method | Route | Description | Responses |
+|--------|------|-------------|-----------|
+| `GET` | `/payments/getAllPayments` | Gets all payments (with client and plan names) | `200` array · `401` not authenticated · `403` insufficient permissions |
+| `GET` | `/payments/getPayment/:id` | Gets a payment by ID | `200` payment · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `GET` | `/payments/client/:clientId` | Gets all payments of a client | `200` array · `401` not authenticated · `403` insufficient permissions · `404` client not found |
+| `POST` | `/payments/createPayment` | Creates a payment | `201` payment created · `400` validation error · `401` not authenticated · `403` insufficient permissions · `404` client/membership not found |
+| `PATCH` | `/payments/updatePayment/:id` | Updates a payment | `200` payment updated · `401` not authenticated · `403` insufficient permissions · `404` not found |
+| `DELETE` | `/payments/deletePayment/:id` | Deletes a payment (responds `{ "message": "The payment with id <id> was deleted" }`) | `200` payment deleted · `401` not authenticated · `403` insufficient permissions · `404` not found |
+
+- All endpoints require the **admin** or **superadmin** role.
+- `POST /createPayment` validates that the **client** exists and, if provided, that the **client membership** exists.
+- `method` allowed values: `cash` | `card` | `transfer`.
+- `status` allowed values: `paid` | `pending` | `overdue` (default `pending`).
+
+### Request bodies (DTOs)
+
+**POST /payments/createPayment** — `CreatePaymentDto`
+```json
+{
+  "client_id": 1,
+  "client_membership_id": 1,
+  "amount": 15000.0,
+  "payment_date": "2026-09-01",
+  "due_date": "2026-09-01",
+  "method": "cash",
+  "status": "paid"
+}
+```
+
+- `client_id` (int, required) — ID of an existing client
+- `client_membership_id` (int, optional) — ID of a client membership the payment is linked to
+- `amount` (number, >= 0, required) — Amount paid
+- `payment_date` (date `YYYY-MM-DD`, required) — Date the payment was made
+- `due_date` (date `YYYY-MM-DD`, required) — Due date
+- `method` (string, required) — `cash` | `card` | `transfer`
+- `status` (string, optional) — `paid` | `pending` | `overdue`
+
+**PATCH /payments/updatePayment/:id** — `UpdatePaymentDto` (`client_membership_id`, `amount`, `payment_date`, `due_date`, `method`, `status`, all optional).
+
+### Tables used
+
+| Table | Purpose |
+|-------|---------|
+| `payments` | Payments (`client_id`, `client_membership_id`, `amount`, `payment_date`, `due_date`, `method`, `status`) |
+| `clients` | Client data (JOIN for `client_name`) |
+| `client_memberships` + `memberships` | LEFT JOINs for `membership_name` |
 
 ### Guards
 

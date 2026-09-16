@@ -10,6 +10,8 @@ import { ExercisesModule } from './exercises/exercises.module';
 import { RoutinesModule } from './routines/routines.module';
 import { MembershipsModule } from './memberships/memberships.module';
 import { ClientMembershipsModule } from './client-memberships/client-memberships.module';
+import { PaymentsModule } from './payments/payments.module';
+import { ClientRoutinesModule } from './client-routines/client-routines.module';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { ClientMembershipsModule } from './client-memberships/client-memberships
     RoutinesModule,
     MembershipsModule,
     ClientMembershipsModule,
+    PaymentsModule,
+    ClientRoutinesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

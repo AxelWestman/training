@@ -9,5 +9,6 @@ import { RoutinesRepository } from './routines.repository';
   imports: [AuthModule, ExercisesModule],
   controllers: [RoutinesController],
   providers: [RoutinesService, RoutinesRepository],
+  exports: [RoutinesRepository],
 })
 export class RoutinesModule {}

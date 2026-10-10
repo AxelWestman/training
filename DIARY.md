@@ -188,3 +188,23 @@ Built the `attendance` module in `apps/api/src/attendance/` following the 3-laye
 **Schema reference:** `database/schema.sql` — attendance (id, client_id FK, check_in NOT NULL DEFAULT NOW(), check_out, created_at).
 
 **Verify:** `npm run build`, `npm run lint`, `npm test` pass via Docker image `training-api`.
+
+---
+
+## Session 7 — 2026-10-10
+
+### Added E2E test infrastructure (real test database)
+
+Created the first real end-to-end tests, hitting a dedicated Postgres database through the HTTP API.
+
+- **Test database** — `gimnasio_test`, derived from `DATABASE_URL` (or explicit `TEST_DATABASE_URL`). `test/e2e/helpers/test-database.ts`:
+  - `ensureTestDatabase` — creates the database if missing (connects to the maintenance `postgres` DB).
+  - `applySchema` — applies `database/schema.sql`, dropping the demo section and making `CREATE INDEX` idempotent (rewritten to `IF NOT EXISTS`) so it can run repeatedly.
+  - `resetDatabase` — `TRUNCATE ... RESTART IDENTITY CASCADE` on all tables.
+- **Seeding (hybrid)** — `test/e2e/helpers/seed.ts` seeds only the **superadmin** via SQL (bcrypt hash) — necessary because there is no API bootstrap for the first admin. Everything else is created through the HTTP API.
+- **Flow spec** — `test/e2e/full-flow.e2e-spec.ts`: superadmin login → create exercise → create routine with the exercise → create client → create membership + assign → create payment → assign routine → client login → `checkIn` (201) → duplicate `checkIn` (409) → `myAttendance` → admin views client attendance → 401 without session → 403 for admin on `checkIn`.
+- **Auth in tests** — supertest **agents** persist the `session` cookie across requests; `cookieParser()` is re-applied manually in the test app (it is set up in `main.ts`, which tests don't run).
+- **Jest config fix** — added a `moduleNameMapper` (`^src/(.*)$` → `<rootDir>/../src/$1`) to `test/jest-e2e.json`, because modules use absolute `src/...` imports (resolved by tsconfig `baseUrl`, unknown to Jest).
+- **Note** — `POST /auth/login` returns **201** (Nest default for POST), not 200.
+
+**Verify:** `npm run build`, `npm run lint`, `npm test` (113 tests), and `npm run test:e2e` (13 tests) all pass via Docker image `training-api`.

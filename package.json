@@ -12,6 +12,7 @@
     "build:api": "npm run build -w apps/api",
     "build:web": "npm run build -w apps/web",
     "build": "npm run build:api && npm run build:web",
-    "lint": "npm run lint -w apps/api && npm run lint -w apps/web"
+    "lint": "npm run lint -w apps/api && npm run lint -w apps/web",
+    "test:e2e": "npm run test:e2e -w apps/api"
   }
 }

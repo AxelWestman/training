@@ -480,3 +480,22 @@ No hay cuerpos de petición. El `client_id` siempre se deriva del usuario autent
 - Las contraseñas se hashean con **bcrypt** (salt rounds = 10) antes de almacenarse tanto en `clients.password` como en `admins.password_hash`.
 - El login firma un **JWT** guardado en cookie **httpOnly** (no accesible desde JavaScript) con `sameSite: 'lax'` y expiración de 24h.
 - Los guards pueden aplicarse a cualquier endpoint para validar la sesión y el rol antes de ejecutar la lógica.
+
+## Testing
+
+La API usa **Jest** (tests unitarios inline en `apps/api/package.json`) y **supertest** para los tests E2E.
+
+```bash
+npm test -w apps/api       # tests unitarios (servicios, repositorios mockeados)
+npm run test:e2e -w apps/api   # tests E2E (base de datos Postgres real)
+```
+
+### Tests E2E
+
+Los specs E2E viven en `apps/api/test/e2e/` y corren contra una base de datos dedicada **`gimnasio_test`**:
+
+- `helpers/test-database.ts` — crea la base si no existe, aplica `database/schema.sql` (sin la sección de demo, con índices idempotentes) y trunca todas las tablas.
+- `helpers/seed.ts` — siembra el primer **superadmin** vía SQL (bcrypt); el resto se crea a través de la API HTTP.
+- `full-flow.e2e-spec.ts` — el flujo completo: login → ejercicio → rutina → cliente → membresía → pago → asignación de rutina → check-in → historial de asistencia (más casos 401/403/409).
+
+Las credenciales vienen del entorno: `DATABASE_URL` (el nombre de la base de prueba se deriva reemplazándolo por `gimnasio_test`), o bien `TEST_DATABASE_URL` explícita. `cookieParser()` y el mapeo de módulos `src/...` se configuran en la app/config de test, ya que los tests no ejecutan `main.ts`.

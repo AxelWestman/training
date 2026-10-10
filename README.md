@@ -438,6 +438,29 @@ All fields are optional.
 | `clients` | Client data (JOIN for `client_name`) |
 | `client_memberships` + `memberships` | LEFT JOINs for `membership_name` |
 
+## API Endpoints — Attendance
+
+| Method | Route | Description | Responses |
+|--------|------|-------------|-----------|
+| `POST` | `/attendance/checkIn` | Records the authenticated client's check-in for today | `201` check-in created · `401` not authenticated · `403` insufficient permissions · `404` client not found · `409` already checked in today |
+| `GET` | `/attendance/myAttendance` | Lists the authenticated client's own attendance history | `200` array · `401` not authenticated · `403` insufficient permissions |
+| `GET` | `/attendance/client/:clientId` | Lists a client's attendance history | `200` array · `401` not authenticated · `403` insufficient permissions · `404` client not found |
+
+- `POST /checkIn` and `GET /myAttendance` require the **client** role; the client id is taken from the JWT (clients can only check themselves in and view their own history).
+- `GET /client/:clientId` requires the **admin** or **superadmin** role.
+- `POST /checkIn` validates that the client exists and that they have **not** already checked in the same calendar day (`409` otherwise). `check_in` defaults to the current timestamp.
+
+### Request bodies (DTOs)
+
+There are no request bodies. `client_id` is always derived from the authenticated user.
+
+### Table used
+
+| Table | Purpose |
+|-------|---------|
+| `attendance` | Gym check-ins (`client_id`, `check_in`, `check_out`, `created_at`) |
+| `clients` | Client data (validated for existence) |
+
 ### Guards
 
 | Guard | Purpose |

@@ -130,6 +130,14 @@ export interface RoutineWithExercises extends RoutineRow {
   exercises: RoutineExerciseView[];
 }
 
+export interface AttendanceRow {
+  id: number;
+  client_id: number;
+  check_in: string;
+  check_out: string | null;
+  created_at: string;
+}
+
 export interface JwtUser {
   sub: number;
   email: string;

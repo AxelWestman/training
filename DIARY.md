@@ -161,3 +161,30 @@ Changes:
 - Updated READMEs and TODO.md.
 
 **Verify:** `npm run build`, `npm run lint`, `npm test` pass via Docker image `training-api`.
+
+---
+
+## Session 6 — 2026-10-10
+
+### Created Attendance module
+
+Built the `attendance` module in `apps/api/src/attendance/` following the 3-layer architecture:
+
+- **DTO** — `AttendanceResponseDto` (id, client_id, check_in, check_out, created_at). No request body; `client_id` is always derived from the JWT.
+- **Repository** — Raw SQL via `pg.Pool`:
+  - `create(clientId)` — inserts a check-in (`check_in` defaults to `NOW()`).
+  - `findByClientId(clientId)` — history ordered by `check_in DESC`.
+  - `findTodayCheckIn(clientId)` — detects an existing check-in the same calendar day (`check_in::date = CURRENT_DATE`).
+- **Service** — `checkIn` validates the client exists (`UsersRepository` → NotFound), rejects a second same-day check-in (Conflict), otherwise creates. `findByClientId` validates the client exists and returns history.
+- **Controller** — 3 REST endpoints:
+  - `POST /attendance/checkIn` — `@Roles('client')`, `client_id` from `@User('sub')`.
+  - `GET /attendance/myAttendance` — `@Roles('client')`, own history.
+  - `GET /attendance/client/:clientId` — `@Roles('admin','superadmin')`, any client's history.
+- **Module** — Registered `AttendanceModule` in `AppModule`; imports `AuthModule` + `UsersModule`.
+- **Types** — Added `AttendanceRow` to `apps/api/src/database/database.types.ts`.
+- **Tests** — Added `attendance.service.spec.ts` (mocked repos; happy path + NotFound + Conflict).
+- **Documentation** — Updated `TODO.md`, `DIARY.md`, and the README endpoint tables.
+
+**Schema reference:** `database/schema.sql` — attendance (id, client_id FK, check_in NOT NULL DEFAULT NOW(), check_out, created_at).
+
+**Verify:** `npm run build`, `npm run lint`, `npm test` pass via Docker image `training-api`.

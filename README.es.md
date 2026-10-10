@@ -438,6 +438,29 @@ Todos los campos son opcionales.
 | `clients` | Datos del cliente (JOIN para `client_name`) |
 | `client_memberships` + `memberships` | LEFT JOINs para `membership_name` |
 
+## Endpoints API — Asistencia
+
+| Método | Ruta | Descripción | Respuestas |
+|--------|------|-------------|-----------|
+| `POST` | `/attendance/checkIn` | Registra el check-in de hoy del cliente autenticado | `201` check-in creado · `401` no autenticado · `403` permisos insuficientes · `404` cliente no encontrado · `409` ya hizo check-in hoy |
+| `GET` | `/attendance/myAttendance` | Lista el historial de asistencia del propio cliente | `200` array · `401` no autenticado · `403` permisos insuficientes |
+| `GET` | `/attendance/client/:clientId` | Lista el historial de asistencia de un cliente | `200` array · `401` no autenticado · `403` permisos insuficientes · `404` cliente no encontrado |
+
+- `POST /checkIn` y `GET /myAttendance` requieren el rol **client**; el id del cliente se toma del JWT (los clientes solo pueden registrarse a sí mismos y ver su propio historial).
+- `GET /client/:clientId` requiere el rol **admin** o **superadmin**.
+- `POST /checkIn` valida que el cliente exista y que **no** haya hecho check-in en el mismo día calendario (`409` en caso contrario). `check_in` toma por defecto la fecha/hora actual.
+
+### Cuerpos de petición (DTOs)
+
+No hay cuerpos de petición. El `client_id` siempre se deriva del usuario autenticado.
+
+### Tabla usada
+
+| Tabla | Propósito |
+|-------|-----------|
+| `attendance` | Check-ins del gimnasio (`client_id`, `check_in`, `check_out`, `created_at`) |
+| `clients` | Datos del cliente (validada su existencia) |
+
 ### Guards
 
 | Guard | Uso |
